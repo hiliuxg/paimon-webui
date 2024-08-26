@@ -20,7 +20,8 @@ import type { Router } from 'vue-router'
 import styles from './index.module.scss'
 import DagCanvas from './dag-canvas'
 import { useCDCStore } from '@/store/cdc'
-import { createCdcJob, updateCdcJob } from '@/api/models/cdc'
+import {type CdcJobDefinition, createCdcJob, updateCdcJob} from '@/api/models/cdc'
+import Modal from "@/components/modal";
 
 export default defineComponent({
   name: 'DagPage',
@@ -29,22 +30,72 @@ export default defineComponent({
     const CDCStore = useCDCStore()
     const router: Router = useRouter()
 
+    const showModalRef = ref(false)
+    const CDCModalRef = ref()
+    const row =  reactive({
+      name: '',
+      description: '',
+      cdcType: 0,
+      dataDelay: 60 * 1000
+    })
     const name = ref('')
+    const dagRef = ref() as any
+
     onMounted(() => {
       name.value = CDCStore.getModel.name
+      if (dagRef.value && dagRef.value.graph) {
+        dagRef.value.graph.fromJSON({
+          cells: CDCStore.getModel.cells,
+        })
+      }
     })
 
-    const dagRef = ref() as any
+    onUpdated(() => {
+      name.value = CDCStore.getModel.name
+      if (dagRef.value && dagRef.value.graph) {
+        dagRef.value.graph.fromJSON({
+          cells: CDCStore.getModel.cells,
+        })
+      }
+    })
+
+    const handleShowJobInfo = () => {
+      row.name = CDCStore.getModel.name
+      row.description = CDCStore.getModel.description
+      row.cdcType = CDCStore.getModel.cdcType
+      row.dataDelay = CDCStore.getModel.dataDelay
+      showModalRef.value = true
+    }
+
+    const handleConfirm = async (model: any) => {
+      await CDCModalRef.value.formRef.validate()
+      const rawModel = useCDCStore().getModel
+      rawModel.name = model.name
+      rawModel.description = model.description
+      rawModel.cdcType = model.cdcType
+      rawModel.dataDelay = model.dataDelay
+      CDCStore.setModel(rawModel)
+      showModalRef.value = false
+    }
+
     const handleSave = () => {
       const editMode = CDCStore.getModel.editMode
+      const jobParam: CdcJobDefinition = {
+        name: CDCStore.getModel.name,
+        description: CDCStore.getModel.description,
+        cdcType: CDCStore.getModel.cdcType,
+        config: JSON.stringify(dagRef.value.graph.toJSON()),
+        dataDelay: CDCStore.getModel.dataDelay
+      }
       if (editMode === 'edit') {
-        updateCdcJob({ id: CDCStore.getModel.id, name: `${name.value}`, description: CDCStore.getModel.description, cdcType: CDCStore.getModel.synchronizationType, config: JSON.stringify(dagRef.value.graph.toJSON()) })
+        jobParam.id = CDCStore.getModel.id
+        updateCdcJob(jobParam)
           .then(() => {
             router.push({ path: '/cdc_ingestion' })
           })
       }
       else {
-        createCdcJob({ name: `${name.value}`, description: CDCStore.getModel.description, cdcType: CDCStore.getModel.synchronizationType, config: JSON.stringify(dagRef.value.graph.toJSON()) })
+        createCdcJob(jobParam)
           .then(() => {
             router.push({ path: '/cdc_ingestion' })
           })
@@ -54,18 +105,14 @@ export default defineComponent({
     const handleJump = () => {
       router.push({ path: '/cdc_ingestion' })
     }
-
-    onMounted(() => {
-      if (dagRef.value && dagRef.value.graph) {
-        dagRef.value.graph.fromJSON({
-          cells: CDCStore.getModel.cells,
-        })
-      }
-    })
-
     return {
       t,
       name,
+      row,
+      handleShowJobInfo,
+      handleConfirm,
+      showModalRef,
+      CDCModalRef,
       handleSave,
       dagRef,
       handleJump,
@@ -86,26 +133,26 @@ export default defineComponent({
               </n-space>
               <div class={styles.operation}>
                 <n-space>
-                  <n-popover
-                    trigger="hover"
-                    placement="bottom"
-                    v-slots={{
-                      trigger: () => (
-                        <n-button
-                          onClick={this.handleSave}
-                          v-slots={{
-                            icon: () => <n-icon component={Save}></n-icon>,
-                          }}
-                        >
-                        </n-button>
-                      ),
-                    }}
-                  >
-                    <span>{this.t('cdc.save')}</span>
-                  </n-popover>
+                  <n-button onClick={this.handleShowJobInfo}>
+                    {this.t('cdc.cdc_job_info')}
+                  </n-button>
+                  <n-button type="primary" onClick={this.handleSave}>
+                    {this.t('cdc.save_synchronization_job')}
+                  </n-button>
                 </n-space>
               </div>
             </div>
+            {this.showModalRef && (
+                <Modal
+                    ref="CDCModalRef"
+                    row={this.row}
+                    showModal={this.showModalRef}
+                    title={this.t('cdc.cdc_job_info')}
+                    formType="CDCLIST"
+                    onCancel={() => (this.showModalRef = false)}
+                    onConfirm={this.handleConfirm}
+                />
+            )}
           </n-card>
           <DagCanvas ref="dagRef"></DagCanvas>
         </n-space>

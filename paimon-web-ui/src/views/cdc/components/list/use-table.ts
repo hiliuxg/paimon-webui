@@ -71,6 +71,9 @@ export function useTable(ctx: any) {
                 CDCStore.setModel({
                   cells: JSON.parse(res.data.config).cells,
                   name: res.data.name,
+                  description: res.data.description,
+                  cdcType: res.data.cdcType,
+                  dataDelay: res.data.dataDelay,
                   editMode: 'edit',
                   id: res.data.id,
                 })

@@ -29,6 +29,8 @@ import org.apache.paimon.web.common.util.JSONUtils;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.util.Optional;
+
 /** MysqlSyncTableActionContextFactory. */
 public class MysqlSyncTableActionContextFactory implements FlinkCdcActionContextFactory {
 
@@ -50,8 +52,8 @@ public class MysqlSyncTableActionContextFactory implements FlinkCdcActionContext
     @Override
     public ActionContext getActionContext(ObjectNode actionConfigs) {
         return MysqlSyncTableActionContext.builder()
-                .sessionUrl(String.valueOf(actionConfigs.get(FlinkCdcOptions.SESSION_URL)))
-                .flinkJobType(FlinkJobType.SESSION)
+                .sessionUrl(Optional.of(String.valueOf(actionConfigs.get(FlinkCdcOptions.SESSION_URL))))
+                .flinkJobType(Optional.of(FlinkJobType.SESSION))
                 .warehouse(JSONUtils.getString(actionConfigs, FlinkCdcOptions.WAREHOUSE))
                 .database(JSONUtils.getString(actionConfigs, FlinkCdcOptions.DATABASE))
                 .table(JSONUtils.getString(actionConfigs, FlinkCdcOptions.TABLE))
@@ -59,6 +61,8 @@ public class MysqlSyncTableActionContextFactory implements FlinkCdcActionContext
                 .actionPath(ActionContextUtil.getActionJarPath())
                 .catalogConfList(JSONUtils.getList(actionConfigs, FlinkCdcOptions.CATALOG_CONF))
                 .mysqlConfList(JSONUtils.getList(actionConfigs, FlinkCdcOptions.MYSQL_CONF))
+                .executionCheckPointInterval(Optional.of(JSONUtils.getInteger(actionConfigs, FlinkCdcOptions.EXE_CP_INTERVAL)))
+                .pipelineName(Optional.of(JSONUtils.getString(actionConfigs, FlinkCdcOptions.PIPELINE_NAME)))
                 .build();
     }
 }

@@ -38,22 +38,7 @@ export default defineComponent({
           name: 'MySQL',
           value: 'MYSQL',
           type: 'INPUT',
-        },
-        {
-          name: 'Kafka',
-          value: 'KAFKA',
-          type: 'INPUT',
-        },
-        {
-          name: 'MongoDB',
-          value: 'MONGODB',
-          type: 'INPUT',
-        },
-        {
-          name: 'PostgreSQL',
-          value: 'POSTGRESQL',
-          type: 'INPUT',
-        },
+        }
       ],
       sinkList: [
         {
@@ -83,11 +68,11 @@ export default defineComponent({
   render() {
     return (
       <div class={styles['dag-slider']} id="dag-slider">
-        <n-card class={styles.card} content-style="overflow:scroll;">
+        <n-card class={styles.card} >
           <n-space vertical>
             <div class={styles.source}>
               <n-space vertical size={15}>
-                <div class={styles.title}>Source</div>
+                <div class={styles.title}>{this.t('cdc.cdc_data_source')}</div>
                 {
                   this.sourceList.map((item) => {
                     return (
@@ -101,7 +86,7 @@ export default defineComponent({
             </div>
             <div class={styles.sink}>
               <n-space vertical size={15}>
-                <div class={styles.title}>Sink</div>
+                <div class={styles.title}>{this.t('cdc.cdc_data_sink')}</div>
                 {
                   this.sinkList.map((item) => {
                     return (

@@ -16,16 +16,30 @@
  * limitations under the License.
  */
 
-package org.apache.paimon.web.server.data.dto;
+package org.apache.paimon.web.api.enums;
 
-import lombok.Data;
+import lombok.Getter;
 
-/** DTO of CdcJobSubmit. */
-@Data
-public class CdcJobSubmitDTO {
+import java.util.Arrays;
+import java.util.Objects;
 
-    private String clusterId;
-    private Long startupTimestamp;
-    private Integer startupMode;
+/** StartupMode. */
+@Getter
+public enum SyncMode {
+    INCREMENTAL_SYNC(0),
+    FULL_SYNC(1),
+    TS_SYNC(2);
 
+    private final int mode;
+
+    SyncMode(Integer mode) {
+        this.mode = mode;
+    }
+
+    public static SyncMode valueOf(Integer mode) {
+        return Arrays.stream(values())
+                .filter(x -> Objects.equals(x.getMode(), mode))
+                .findFirst()
+                .orElse(null);
+    }
 }

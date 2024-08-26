@@ -29,6 +29,8 @@ import org.apache.paimon.web.common.util.JSONUtils;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.util.Optional;
+
 /**
  * A factory designed for creating {@link FlinkCdcActionContextFactory}, implementing full database
  * synchronization with MySQL.
@@ -52,13 +54,15 @@ public class MysqlSyncDatabasesActionContextFactory implements FlinkCdcActionCon
     @Override
     public ActionContext getActionContext(ObjectNode actionConfigs) {
         return MysqlSyncDatabaseActionContext.builder()
-                .sessionUrl(String.valueOf(actionConfigs.get(FlinkCdcOptions.SESSION_URL)))
-                .flinkJobType(FlinkJobType.SESSION)
+                .sessionUrl(Optional.of(String.valueOf(actionConfigs.get(FlinkCdcOptions.SESSION_URL))))
+                .flinkJobType(Optional.of(FlinkJobType.SESSION))
                 .warehouse(JSONUtils.getString(actionConfigs, FlinkCdcOptions.WAREHOUSE))
                 .database(JSONUtils.getString(actionConfigs, FlinkCdcOptions.DATABASE))
                 .actionPath(ActionContextUtil.getActionJarPath())
                 .catalogConfList(JSONUtils.getList(actionConfigs, FlinkCdcOptions.CATALOG_CONF))
                 .mysqlConfList(JSONUtils.getList(actionConfigs, FlinkCdcOptions.MYSQL_CONF))
+                .executionCheckPointInterval(Optional.of(JSONUtils.getInteger(actionConfigs, FlinkCdcOptions.EXE_CP_INTERVAL)))
+                .pipelineName(Optional.of(JSONUtils.getString(actionConfigs, FlinkCdcOptions.PIPELINE_NAME)))
                 .build();
     }
 }

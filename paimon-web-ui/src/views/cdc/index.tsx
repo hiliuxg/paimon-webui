@@ -48,10 +48,6 @@ export default defineComponent({
       showModalRef.value = true
     }
 
-    function handleOpenSubmitCdcJobModal() {
-      showSubmitCdcJobModalRef.value = true
-    }
-
     function handleCdcSubmitConfirm(form: CdcJobSubmit) {
       const CDCStore = useCDCStore()
       submitCdcJob(CDCStore.getModel.id, form)
@@ -70,7 +66,6 @@ export default defineComponent({
       handleConfirm,
       CDCModalRef,
       submitCdcJobModalRef,
-      handleOpenSubmitCdcJobModal,
       handleCdcSubmitConfirm,
       cdcJobTableRef,
       handleSeachCdcJobTable,

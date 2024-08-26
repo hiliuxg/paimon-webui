@@ -22,19 +22,33 @@ import org.apache.paimon.web.api.enums.FlinkJobType;
 
 import lombok.experimental.SuperBuilder;
 
+import java.util.Optional;
+
 /** FlinkActionContext. */
 @SuperBuilder
 public abstract class FlinkActionContext extends AbstractActionContext implements ActionContext {
 
-    private String sessionUrl;
+    private Optional<String> sessionUrl;
 
-    private FlinkJobType flinkJobType;
+    private Optional<FlinkJobType> flinkJobType;
 
-    public String getSessionUrl() {
+    private Optional<String> pipelineName;
+
+    private Optional<Integer> executionCheckPointInterval;
+
+    public Optional<String> getSessionUrl() {
         return sessionUrl;
     }
 
-    public FlinkJobType getFlinkJobType() {
+    public Optional<FlinkJobType> getFlinkJobType() {
         return flinkJobType;
+    }
+
+    public Optional<String> getPipelineName() {
+        return pipelineName;
+    }
+
+    public Optional<Integer> getExecutionCheckPointInterval() {
+        return executionCheckPointInterval;
     }
 }

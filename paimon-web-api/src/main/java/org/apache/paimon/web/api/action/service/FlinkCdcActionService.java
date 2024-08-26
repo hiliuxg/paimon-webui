@@ -45,14 +45,24 @@ public class FlinkCdcActionService implements ActionService {
         List<String> commandList = new ArrayList<>();
         commandList.add("bin/flink");
         commandList.add("run");
-        if (actionContext.getFlinkJobType() != FlinkJobType.SESSION) {
+
+        if (actionContext.getFlinkJobType().isPresent() &&
+                actionContext.getFlinkJobType().get() != FlinkJobType.SESSION) {
             throw new ActionException("Only support session job now.");
         }
-        String sessionUrl = actionContext.getSessionUrl();
-        if (StringUtils.isNotBlank(sessionUrl)) {
+
+        actionContext.getSessionUrl().ifPresent(val -> {
             commandList.add("-m");
-            commandList.add(sessionUrl);
-        }
+            commandList.add(val);
+        });
+        actionContext.getPipelineName().ifPresent(val -> {
+            commandList.add("-Dpipeline.name=" + val);
+        });
+
+        actionContext.getExecutionCheckPointInterval().ifPresent(val -> {
+            commandList.add("-Dexecution.checkpointing.interval=" + val);
+        });
+
         commandList.add(actionContext.getJarPath());
         commandList.addAll(actionContext.getArguments());
         return commandList;

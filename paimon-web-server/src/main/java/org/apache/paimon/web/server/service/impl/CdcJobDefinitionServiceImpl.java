@@ -27,6 +27,7 @@ import org.apache.paimon.web.api.action.service.FlinkCdcActionService;
 import org.apache.paimon.web.api.catalog.PaimonServiceFactory;
 import org.apache.paimon.web.api.enums.FlinkCdcDataSourceType;
 import org.apache.paimon.web.api.enums.FlinkCdcSyncType;
+import org.apache.paimon.web.api.enums.SyncMode;
 import org.apache.paimon.web.common.util.JSONUtils;
 import org.apache.paimon.web.server.data.dto.CdcJobDefinitionDTO;
 import org.apache.paimon.web.server.data.dto.CdcJobSubmitDTO;
@@ -92,6 +93,7 @@ public class CdcJobDefinitionServiceImpl
                         .cdcType(cdcJobDefinitionDTO.getCdcType())
                         .createUser(jobCreateUser)
                         .description(cdcJobDefinitionDTO.getDescription())
+                        .dataDelay(cdcJobDefinitionDTO.getDataDelay())
                         .build();
         baseMapper.insert(cdcJobDefinition);
         return R.succeed();
@@ -137,6 +139,7 @@ public class CdcJobDefinitionServiceImpl
                         .name(cdcJobDefinitionDTO.getName())
                         .config(cdcJobDefinitionDTO.getConfig())
                         .cdcType(cdcJobDefinitionDTO.getCdcType())
+                        .dataDelay(cdcJobDefinitionDTO.getDataDelay())
                         .createUser(cdcJobDefinitionDTO.getCreateUser())
                         .description(cdcJobDefinitionDTO.getDescription())
                         .build();
@@ -163,8 +166,13 @@ public class CdcJobDefinitionServiceImpl
         actionConfigs.put(
                 FlinkCdcOptions.SESSION_URL,
                 String.format("%s:%s", clusterInfo.getHost(), clusterInfo.getPort()));
-        handleCdcGraphNodeData(actionConfigs, cdcGraph.getSource(), flinkCdcSyncType);
-        handleCdcGraphNodeData(actionConfigs, cdcGraph.getTarget(), flinkCdcSyncType);
+        actionConfigs.put(
+                FlinkCdcOptions.PIPELINE_NAME, cdcJobDefinition.getName());
+        actionConfigs.put(
+                FlinkCdcOptions.EXE_CP_INTERVAL, cdcJobDefinition.getDataDelay());
+
+        handleCdcGraphNodeData(actionConfigs, cdcGraph.getSource(), flinkCdcSyncType, cdcJobSubmitDTO);
+        handleCdcGraphNodeData(actionConfigs, cdcGraph.getTarget(), flinkCdcSyncType, cdcJobSubmitDTO);
         ActionContext actionContext = factory.getActionContext(actionConfigs);
         try {
             actionService.execute(actionContext);
@@ -175,7 +183,7 @@ public class CdcJobDefinitionServiceImpl
     }
 
     private void handleCdcGraphNodeData(
-            ObjectNode actionConfigs, CdcNode node, FlinkCdcSyncType cdcSyncType) {
+            ObjectNode actionConfigs, CdcNode node, FlinkCdcSyncType cdcSyncType, CdcJobSubmitDTO cdcJobSubmitDTO) {
         FlinkCdcDataSourceType cdcDataSourceType = FlinkCdcDataSourceType.of(node.getType());
         Preconditions.checkNotNull(
                 cdcDataSourceType,
@@ -185,7 +193,7 @@ public class CdcJobDefinitionServiceImpl
                 handlePaimonNodeData(actionConfigs, node.getData(), cdcSyncType);
                 break;
             case MYSQL:
-                handleMysqlNodeData(actionConfigs, node.getData(), cdcSyncType);
+                handleMysqlNodeData(actionConfigs, node.getData(), cdcSyncType, cdcJobSubmitDTO);
                 break;
             case POSTGRESQL:
                 handlePostgresNodeData(actionConfigs, node.getData());
@@ -228,8 +236,9 @@ public class CdcJobDefinitionServiceImpl
     }
 
     private void handleMysqlNodeData(
-            ObjectNode actionConfigs, ObjectNode mysqlData, FlinkCdcSyncType cdcSyncType) {
-        List<String> mysqlConfList = getOtherConfigs(actionConfigs);
+            ObjectNode actionConfigs, ObjectNode mysqlData,
+            FlinkCdcSyncType cdcSyncType, CdcJobSubmitDTO cdcJobSubmitDTO) {
+        List<String> mysqlConfList = getOtherConfigs(mysqlData);
         mysqlConfList.add(buildKeyValueString("hostname", JSONUtils.getString(mysqlData, "host")));
         mysqlConfList.add(
                 buildKeyValueString("username", JSONUtils.getString(mysqlData, "username")));
@@ -243,6 +252,26 @@ public class CdcJobDefinitionServiceImpl
         }
         mysqlConfList.add(
                 buildKeyValueString("password", JSONUtils.getString(mysqlData, "password")));
+
+        SyncMode syncMode = SyncMode.valueOf(cdcJobSubmitDTO.getStartupMode());
+        switch (syncMode){
+            case INCREMENTAL_SYNC:
+                mysqlConfList.add(
+                        buildKeyValueString("scan.startup.mode", "latest-offset"));
+                break;
+            case FULL_SYNC:
+                mysqlConfList.add(
+                        buildKeyValueString("scan.startup.mode", "initial"));
+                break;
+            case TS_SYNC:
+                mysqlConfList.add(
+                        buildKeyValueString("scan.startup.mode", "timestamp"));
+                mysqlConfList.add(
+                        buildKeyValueString("scan.startup.timestamp-millis",
+                                String.valueOf(cdcJobSubmitDTO.getStartupTimestamp())));
+                break;
+        }
+
         actionConfigs.putPOJO(FlinkCdcOptions.MYSQL_CONF, mysqlConfList);
     }
 

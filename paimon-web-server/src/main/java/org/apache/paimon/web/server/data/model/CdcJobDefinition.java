@@ -47,5 +47,7 @@ public class CdcJobDefinition extends BaseModel implements Serializable {
 
     private String createUser;
 
+    private Integer dataDelay;
+
     @TableLogic private boolean isDelete;
 }

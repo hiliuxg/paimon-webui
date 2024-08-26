@@ -38,4 +38,7 @@ public class CdcJobDefinitionDTO {
     private String config;
 
     private String createUser;
+
+    private int  dataDelay;
+
 }

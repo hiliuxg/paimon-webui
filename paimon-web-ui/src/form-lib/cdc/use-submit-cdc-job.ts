@@ -26,6 +26,8 @@ export function useSumbitCdcJob(item: any) {
 
   const model = reactive<CdcJobSubmit>({
     flinkSessionUrl: item.flinkSessionUrl,
+    startupMode: item.startupMode,
+    startupTimestamp: item.startupTimestamp,
   })
 
   const flinkSessionClusterOptions = ref<SelectOption[]>([])
@@ -38,6 +40,23 @@ export function useSumbitCdcJob(item: any) {
       }))
     }
   })
+
+  const synchronizationModeOptions = [
+    {
+      label: t('cdc.inc_synchronization'),
+      value: 0,
+    },
+    {
+      label: t('cdc.full_synchronization'),
+      value: 1,
+    },
+    {
+      label: t('cdc.ts_synchronization'),
+      value: 2,
+    }
+
+  ]
+
   return {
     json: [
       {
@@ -56,6 +75,21 @@ export function useSumbitCdcJob(item: any) {
             if (!value)
               return new Error('error')
           },
+        },
+      },
+      {
+        type: 'radio',
+        field: 'startupMode',
+        name: t('cdc.synchronization_mode'),
+        options: synchronizationModeOptions,
+        value: 0,
+      },
+      {
+        type: 'input',
+        field: 'startupTimestamp',
+        name: '指定时间',
+        props: {
+          placeholder: '选择同步模式为指定时间时填写，13位时间戳'
         },
       },
     ] as IJsonItem[],

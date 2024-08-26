@@ -20,12 +20,6 @@ import type { IJsonItem } from '@/components/dynamic-form/types'
 export function useCDCList(item: any) {
   const { t } = useLocaleHooks()
 
-  const model = reactive({
-    name: item.name,
-    description: item.description,
-    synchronizationType: item.synchronizationType,
-  })
-
   const synchronizationTypeOptions = [
     {
       label: t('cdc.single_table_synchronization'),
@@ -36,6 +30,41 @@ export function useCDCList(item: any) {
       value: 1,
     },
   ]
+
+  const dataDelayModelOptions = [
+    {
+      label: "1min",
+      value: 60 * 1000,
+    },
+    {
+      label: "5min",
+      value: 5 * 60 * 1000,
+    },
+    {
+      label: "10min",
+      value: 10 * 60 * 1000,
+    },
+    {
+      label: "15min",
+      value: 15 * 60 * 1000,
+    },
+    {
+      label: "30min",
+      value: 30 * 60 * 1000,
+    },
+    {
+      label: "1hour",
+      value: 60 * 60 * 1000,
+    },
+  ]
+
+  const data = item.data
+  const model = reactive({
+    name: data?.name,
+    description: data?.description,
+    cdcType: data?.cdcType || 0,
+    dataDelay: data?.dataDelay || 60 * 1000,
+  })
 
   return {
     json: [
@@ -62,14 +91,22 @@ export function useCDCList(item: any) {
         name: t('cdc.task_description'),
         props: {
           placeholder: '',
+          type: 'textarea'
         },
       },
       {
+        type: 'select',
+        field: 'dataDelay',
+        name: t('cdc.data_delay_option'),
+        options: dataDelayModelOptions,
+        value: model.dataDelay ,
+      },
+      {
         type: 'radio',
-        field: 'synchronizationType',
+        field: 'cdcType',
         name: t('cdc.synchronization_type'),
         options: synchronizationTypeOptions,
-        value: 0,
+        value: model.cdcType,
       },
     ] as IJsonItem[],
     model,

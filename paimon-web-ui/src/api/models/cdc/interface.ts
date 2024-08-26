@@ -24,8 +24,11 @@ export interface CdcJobDefinition {
   cdcType?: number
   config?: string
   createUser?: string
+  dataDelay: number
 }
 
 export interface CdcJobSubmit {
   flinkSessionUrl: string
+  startupMode: number
+  startupTimestamp?: number
 }

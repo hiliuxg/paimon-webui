@@ -41,6 +41,7 @@ export default defineComponent({
       if (graph.value) {
         graph.value.on('node:dblclick', ({ node }) => {
           nodeVariables.showDrawer = true
+          nodeVariables.showContextMenu = false
           nodeVariables.row = node.data
         })
         graph.value.on('node:contextmenu', ({ e, node }) => {

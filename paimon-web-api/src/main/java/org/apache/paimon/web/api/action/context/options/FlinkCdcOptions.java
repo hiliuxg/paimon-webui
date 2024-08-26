@@ -24,6 +24,7 @@ public class FlinkCdcOptions {
     private FlinkCdcOptions() {}
 
     public static final String MYSQL_CONF = "mysql_conf";
+
     public static final String POSTGRES_CONF = "postgres_conf";
 
     public static final String TABLE_CONF = "table_conf";
@@ -43,4 +44,8 @@ public class FlinkCdcOptions {
     public static final String SESSION_URL = "sessionUrl";
 
     public static final String CATALOG_CONF = "catalog_conf";
+
+    public static final String PIPELINE_NAME = "pipeline.name";
+
+    public static final String EXE_CP_INTERVAL = "execution.checkpointing.interval";
 }
