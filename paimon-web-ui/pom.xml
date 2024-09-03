@@ -70,7 +70,7 @@ under the License.
                                 </goals>
                                 <phase>generate-resources</phase>
                                 <configuration>
-                                    <arguments>install --legacy-peer-deps</arguments>
+                                    <arguments>install</arguments>
                                 </configuration>
                             </execution>
                             <execution>

@@ -22,4 +22,5 @@ import org.apache.paimon.web.server.data.model.CdcJobLog;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
+/** interface for cdc log mapper . */
 public interface CdcJobLogMapper extends BaseMapper<CdcJobLog> {}

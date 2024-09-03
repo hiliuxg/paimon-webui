@@ -25,6 +25,7 @@ import org.apache.flink.runtime.rest.messages.EmptyRequestBody;
 import org.apache.flink.runtime.rest.messages.RuntimeMessageHeaders;
 import org.apache.flink.shaded.netty4.io.netty.handler.codec.http.HttpResponseStatus;
 
+/** headers using for stopping with savepoint . */
 public class StopWithSavePointHeaders
         implements RuntimeMessageHeaders<
                 EmptyRequestBody, TriggerIdEntity, JobIdMessageParameters> {

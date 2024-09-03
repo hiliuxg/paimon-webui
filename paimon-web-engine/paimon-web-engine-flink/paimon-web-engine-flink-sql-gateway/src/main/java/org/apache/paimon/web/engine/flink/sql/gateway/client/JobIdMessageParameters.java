@@ -25,6 +25,7 @@ import org.apache.flink.runtime.rest.messages.MessageQueryParameter;
 import java.util.Collection;
 import java.util.Collections;
 
+/** object using for jobId param. */
 public class JobIdMessageParameters extends MessageParameters {
 
     private final JobIdMessagePathParameter jobIdMessagePathParameter =

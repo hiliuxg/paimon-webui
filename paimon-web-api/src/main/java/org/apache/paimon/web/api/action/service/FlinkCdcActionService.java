@@ -39,8 +39,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class FlinkCdcActionService implements ActionService {
 
-    private static int DEFAULT_TIMEOUT_SECCOND = 60;
-    private static String JOB_ID_LOG_PREFIX = "Job has been submitted with JobID ";
+    private static final int DEFAULT_TIMEOUT_SECCOND = 60;
+    private static final String JOB_ID_LOG_PREFIX = "Job has been submitted with JobID ";
 
     private List<String> getCommand(FlinkActionContext actionContext) {
         List<String> commandList = new ArrayList<>();

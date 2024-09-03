@@ -21,6 +21,7 @@ package org.apache.paimon.web.engine.flink.sql.gateway.client;
 import org.apache.flink.runtime.rest.messages.ConversionException;
 import org.apache.flink.runtime.rest.messages.MessagePathParameter;
 
+/** use to resolve jobId param. */
 public class JobIdMessagePathParameter extends MessagePathParameter<String> {
 
     public static final String KEY = "jobid";

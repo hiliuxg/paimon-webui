@@ -28,6 +28,7 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.annotation.JsonPro
 import java.util.List;
 import java.util.Map;
 
+/** entity using for job overview . */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class JobOverviewEntity implements ResponseBody, InfoMessage {

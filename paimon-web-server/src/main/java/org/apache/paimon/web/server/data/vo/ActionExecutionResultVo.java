@@ -25,6 +25,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/** vo for action execution result . */
 @Data
 @Builder
 @NoArgsConstructor
