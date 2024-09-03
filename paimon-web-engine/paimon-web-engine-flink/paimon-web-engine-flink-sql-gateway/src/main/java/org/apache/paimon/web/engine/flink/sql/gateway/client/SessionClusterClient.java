@@ -19,7 +19,9 @@
 package org.apache.paimon.web.engine.flink.sql.gateway.client;
 
 import org.apache.paimon.web.engine.flink.common.status.HeartbeatStatus;
+import org.apache.paimon.web.engine.flink.sql.gateway.model.JobOverviewEntity;
 import org.apache.paimon.web.engine.flink.sql.gateway.model.HeartbeatEntity;
+import org.apache.paimon.web.engine.flink.sql.gateway.model.TriggerIdEntity;
 import org.apache.paimon.web.engine.flink.sql.gateway.utils.SqlGateWayRestClient;
 
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +37,7 @@ import java.util.Objects;
  * the cluster status. etc. The flink client implementation of the {@link HeartbeatAction}.
  */
 @Slf4j
-public class SessionClusterClient implements HeartbeatAction {
+public class SessionClusterClient implements HeartbeatAction, FlinkJobAction {
 
     private final SqlGateWayRestClient restClient;
 
@@ -62,12 +64,50 @@ public class SessionClusterClient implements HeartbeatAction {
                         .build();
             }
         } catch (Exception ex) {
-            log.error(
-                    "An exception occurred while obtaining the cluster status :{}",
-                    ex.getMessage(),
-                    ex);
+            //log.error(
+            //        "An exception occurred while obtaining the cluster status :{}",
+            //        ex.getMessage(),
+            //        ex);
             return this.buildResulHeartbeatEntity(HeartbeatStatus.UNREACHABLE);
         }
         return this.buildResulHeartbeatEntity(HeartbeatStatus.UNKNOWN);
+    }
+
+    @Override
+    public JobOverviewEntity jobOverview(String jobId) {
+        try {
+            return restClient
+                .sendRequest(
+                    new JobOverViewHeaders(jobId),
+                    new JobIdMessageParameters(jobId),
+                    EmptyRequestBody.getInstance())
+                .get();
+        } catch (Exception ex) {
+           log.error(
+                   "An exception occurred while request job of {} overview: {}",
+                   jobId,
+                   ex.getMessage(),
+                   ex);
+        }
+        return null;
+    }
+
+    @Override
+    public TriggerIdEntity stopWithSavePoint(String jobId) {
+        try {
+            return restClient
+                    .sendRequest(
+                            new StopWithSavePointHeaders(jobId),
+                            new JobIdMessageParameters(jobId),
+                            EmptyRequestBody.getInstance())
+                    .get();
+        } catch (Exception ex) {
+            log.error(
+                    "An exception occurred while stop job of {} with savePoint: {}",
+                    jobId,
+                    ex.getMessage(),
+                    ex);
+        }
+        return null;
     }
 }

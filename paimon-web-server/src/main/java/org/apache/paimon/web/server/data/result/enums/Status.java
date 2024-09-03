@@ -80,6 +80,8 @@ public enum Status {
     /** ------------cdc-----------------. */
     CDC_JOB_EXIST_ERROR(10601, "cdc.job.exist.error"),
     CDC_JOB_NO_EXIST_ERROR(10602, "cdc.job.not.exist.error"),
+    CDC_JOB_FLINK_JOB_ID_NOT_EXISTS(10603, "cdc.job.flink.job.id.not.exists"),
+    CDC_JOB_FLINK_JOB_LOCKED(10604, "cdc.job.flink.job.locked"),
 
     /** ------------cluster-----------------. */
     CLUSTER_NOT_EXIST(10701, "cluster.not.exist"),

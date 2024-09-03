@@ -16,37 +16,30 @@
  * limitations under the License.
  */
 
-package org.apache.paimon.web.server.data.model;
+package org.apache.paimon.web.engine.flink.sql.gateway.client;
 
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import org.apache.paimon.web.engine.flink.sql.gateway.model.JobOverviewEntity;
+import org.apache.paimon.web.engine.flink.sql.gateway.model.TriggerIdEntity;
 
-import java.io.Serializable;
-/** Model of cdc_job_definition. */
-@TableName(value = "cdc_job_definition")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-@Builder
-public class CdcJobDefinition extends BaseModel implements Serializable {
+/** Using to execute flink job action. */
+public interface FlinkJobAction {
 
-    private String name;
 
-    private String description;
+    /**
+     * Execute cluster action to get job overview.
+     *
+     * @param jobId the flink jobId
+     * @return flink job entity.
+     */
+    JobOverviewEntity jobOverview(String jobId);
 
-    private Integer cdcType;
+    /**
+     * Stops a job with a savepoint.
+     *
+     * @param jobId the flink jobId
+     * @return return a 'triggerId' for further query identifier.
+     */
+    TriggerIdEntity stopWithSavePoint(String jobId);
 
-    private String config;
 
-    private String createUser;
-
-    private Integer dataDelay;
-
-    @TableLogic private boolean isDelete;
 }

@@ -27,5 +27,6 @@ public class CdcJobSubmitDTO {
     private String clusterId;
     private Long startupTimestamp;
     private Integer startupMode;
+    private String createUser;
 
 }

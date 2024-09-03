@@ -268,10 +268,10 @@ public class SqlGatewayClient implements HeartbeatAction {
                         .build();
             }
         } catch (Exception exec) {
-            log.error(
-                    "An exception occurred while obtaining the cluster status :{}",
-                    exec.getMessage(),
-                    exec);
+            //log.error(
+            //        "An exception occurred while obtaining the cluster status :{}",
+            //        exec.getMessage(),
+            //        exec);
             return this.buildResulHeartbeatEntity(HeartbeatStatus.UNREACHABLE);
         }
         return this.buildResulHeartbeatEntity(HeartbeatStatus.UNKNOWN);

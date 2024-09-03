@@ -18,11 +18,14 @@
 
 package org.apache.paimon.web.server.controller;
 
+import org.apache.paimon.web.engine.flink.common.status.JobStatus;
 import org.apache.paimon.web.server.data.dto.CdcJobDefinitionDTO;
 import org.apache.paimon.web.server.data.dto.CdcJobSubmitDTO;
 import org.apache.paimon.web.server.data.model.CdcJobDefinition;
 import org.apache.paimon.web.server.data.result.PageR;
 import org.apache.paimon.web.server.data.result.R;
+import org.apache.paimon.web.server.data.vo.ActionExecutionResultVo;
+import org.apache.paimon.web.server.data.vo.CdcJobDefinitionVO;
 import org.apache.paimon.web.server.service.CdcJobDefinitionService;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
@@ -67,7 +70,7 @@ public class CdcJobDefinitionController {
 
     @SaCheckPermission("cdc:job:list")
     @GetMapping("list")
-    public PageR<CdcJobDefinition> listAllCdcJob(
+    public PageR<CdcJobDefinitionVO> listAllCdcJob(
             @RequestParam(required = false) boolean withConfig,
             @RequestParam(required = false) String jobName,
             @RequestParam long currentPage,
@@ -92,9 +95,30 @@ public class CdcJobDefinitionController {
         return R.succeed();
     }
 
+    @SaCheckPermission("cdc:job:copy")
+    @PutMapping("{id}/copy")
+    public R<Integer> copy(@PathVariable Integer id) {
+        return cdcJobDefinitionService.copy(id);
+    }
+
     @SaCheckPermission("cdc:job:submit")
     @PostMapping("{id}/submit")
-    public R<Void> submit(@PathVariable Integer id, @RequestBody CdcJobSubmitDTO cdcJobSubmitDTO) {
+    public R<ActionExecutionResultVo> submit(@PathVariable Integer id, @RequestBody CdcJobSubmitDTO cdcJobSubmitDTO) {
         return cdcJobDefinitionService.submit(id, cdcJobSubmitDTO);
     }
+
+    @SaCheckPermission("cdc:job:cancel")
+    @PostMapping("{id}/cancel")
+    public R<ActionExecutionResultVo> cancel(@PathVariable Integer id) {
+        return cdcJobDefinitionService.cancel(id);
+    }
+
+    @SaCheckPermission("cdc:job:status")
+    @GetMapping("{id}/status")
+    public R<JobStatus> status(@PathVariable Integer id,
+                               @RequestParam Integer logId) {
+        return cdcJobDefinitionService.status(id, logId);
+    }
+
+
 }

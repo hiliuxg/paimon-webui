@@ -21,18 +21,20 @@ package org.apache.paimon.web.api.action.context;
 /** ActionExecutionResult. */
 public class ActionExecutionResult {
 
+    private String flinkJobId;
     private boolean success;
     private String errorMsg;
 
-    public static ActionExecutionResult success() {
+    public static ActionExecutionResult success(String flinkJobId) {
         ActionExecutionResult actionExecutionResult = new ActionExecutionResult();
         actionExecutionResult.success = true;
+        actionExecutionResult.flinkJobId = flinkJobId;
         return actionExecutionResult;
     }
 
     public static ActionExecutionResult fail(String errorMsg) {
         ActionExecutionResult actionExecutionResult = new ActionExecutionResult();
-        actionExecutionResult.success = true;
+        actionExecutionResult.success = false;
         actionExecutionResult.errorMsg = errorMsg;
         return actionExecutionResult;
     }
@@ -41,15 +43,12 @@ public class ActionExecutionResult {
         return success;
     }
 
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
-
     public String getErrorMsg() {
         return errorMsg;
     }
 
-    public void setErrorMsg(String errorMsg) {
-        this.errorMsg = errorMsg;
+    public String getFlinkJobId(){
+        return flinkJobId;
     }
+
 }

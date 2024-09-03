@@ -16,37 +16,14 @@
  * limitations under the License.
  */
 
-package org.apache.paimon.web.server.data.model;
+package org.apache.paimon.web.server.service;
 
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import com.baomidou.mybatisplus.extension.service.IService;
+import org.apache.paimon.web.server.data.model.CdcJobLog;
+import org.apache.paimon.web.server.data.result.R;
 
-import java.io.Serializable;
-/** Model of cdc_job_definition. */
-@TableName(value = "cdc_job_definition")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-@Builder
-public class CdcJobDefinition extends BaseModel implements Serializable {
+/** Cdc Job Log Service. */
+public interface CdcJobLogService extends IService<CdcJobLog> {
 
-    private String name;
-
-    private String description;
-
-    private Integer cdcType;
-
-    private String config;
-
-    private String createUser;
-
-    private Integer dataDelay;
-
-    @TableLogic private boolean isDelete;
+    CdcJobLog findLast(Integer cdcJobDefinitionId);
 }

@@ -29,6 +29,7 @@ export default defineComponent({
     const { t } = useLocaleHooks()
     const CDCStore = useCDCStore()
     const router: Router = useRouter()
+    const message = useMessage()
 
     const showModalRef = ref(false)
     const CDCModalRef = ref()
@@ -80,11 +81,16 @@ export default defineComponent({
 
     const handleSave = () => {
       const editMode = CDCStore.getModel.editMode
+      const config = dagRef.value.graph.toJSON()
+      if(config.cells.length == 0) {
+        message.warning(t('cdc.cdc_job_save_not_null'))
+        return
+      }
       const jobParam: CdcJobDefinition = {
         name: CDCStore.getModel.name,
         description: CDCStore.getModel.description,
         cdcType: CDCStore.getModel.cdcType,
-        config: JSON.stringify(dagRef.value.graph.toJSON()),
+        config: JSON.stringify(config),
         dataDelay: CDCStore.getModel.dataDelay
       }
       if (editMode === 'edit') {

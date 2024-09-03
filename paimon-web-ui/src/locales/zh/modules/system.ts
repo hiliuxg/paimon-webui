@@ -44,7 +44,7 @@ const role = {
 const roleKey = {
   system: '系统管理',
   metadata: '元数据管理',
-  cdc: 'CDC 集成',
+  cdc: '数据入湖',
   playground: 'Playground',
   menu_manager: '菜单管理',
   user_manager: '用户管理',

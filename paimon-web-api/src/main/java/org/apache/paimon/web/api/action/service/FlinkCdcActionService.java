@@ -33,18 +33,20 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /** An abstract Action service that executes actions through the shell. */
 @Slf4j
 public class FlinkCdcActionService implements ActionService {
-    private static final ExecutorService shellExecutor = Executors.newFixedThreadPool(5);
+
+    private static int DEFAULT_TIMEOUT_SECCOND = 60;
+    private static String JOB_ID_LOG_PREFIX = "Job has been submitted with JobID ";
 
     private List<String> getCommand(FlinkActionContext actionContext) {
         List<String> commandList = new ArrayList<>();
         commandList.add("bin/flink");
         commandList.add("run");
+        commandList.add("-d");
 
         if (actionContext.getFlinkJobType().isPresent() &&
                 actionContext.getFlinkJobType().get() != FlinkJobType.SESSION) {
@@ -68,7 +70,7 @@ public class FlinkCdcActionService implements ActionService {
         return commandList;
     }
 
-    public ActionExecutionResult execute(ActionContext actionContext) throws Exception {
+    public ActionExecutionResult execute(ActionContext actionContext) {
         String flinkHome = getFlinkHome();
         FlinkActionContext flinkActionContext;
         if (!(actionContext instanceof FlinkActionContext)) {
@@ -79,25 +81,37 @@ public class FlinkCdcActionService implements ActionService {
         try {
             List<String> command = getCommand(flinkActionContext);
             Process process = new ShellService(flinkHome, command).execute();
-            shellExecutor.execute(
-                    () -> {
-                        try (InputStream inputStream = process.getInputStream();
-                                InputStream errorStream = process.getErrorStream(); ) {
-                            List<String> logLines =
-                                    IOUtils.readLines(inputStream, StandardCharsets.UTF_8);
-                            for (String logLine : logLines) {
-                                log.info(logLine);
-                            }
-                            List<String> errorLines =
-                                    IOUtils.readLines(errorStream, StandardCharsets.UTF_8);
-                            for (String logLine : errorLines) {
-                                log.error(logLine);
-                            }
-                        } catch (Exception e) {
-                            log.error(e.getMessage(), e);
-                        }
-                    });
-            result = ActionExecutionResult.success();
+            boolean hasExited = process.waitFor(DEFAULT_TIMEOUT_SECCOND, TimeUnit.SECONDS);
+            if (hasExited){
+                int value = process.exitValue();
+                try (InputStream inputStream = process.getInputStream();
+                     InputStream errorStream = process.getErrorStream()) {
+                    List<String> lines = IOUtils.readLines(inputStream, StandardCharsets.UTF_8);
+                    if (value == 0) {
+                        String infoLines = String.join("\n", lines);
+                        log.info("run shell command [{}] get info log\n{}",
+                                String.join(" ", command), infoLines);
+                        String flinkJobId = lines.stream()
+                                .filter(item -> item.startsWith(JOB_ID_LOG_PREFIX))
+                                .map(item -> item.replaceAll(JOB_ID_LOG_PREFIX, ""))
+                                .findFirst().orElse(null);
+                        result = ActionExecutionResult.success(flinkJobId);
+                    } else{
+                        lines.addAll(IOUtils.readLines(errorStream, StandardCharsets.UTF_8));
+                        String errLines = String.join("\n", lines);
+                        log.info("run shell command [{}] get error log\n{}",
+                                String.join(" ", command), errLines);
+                        result = ActionExecutionResult.fail(errLines);
+                    }
+                } catch (Exception exception) {
+                    log.error(exception.getMessage(), exception);
+                    result = ActionExecutionResult.fail(exception.getMessage());
+                }
+            }else{
+                process.destroyForcibly();
+                result = ActionExecutionResult.fail(
+                        String.format("run shell command timeout after %s second", DEFAULT_TIMEOUT_SECCOND));
+            }
         } catch (Exception exception) {
             log.error(exception.getMessage(), exception);
             result = ActionExecutionResult.fail(exception.getMessage());

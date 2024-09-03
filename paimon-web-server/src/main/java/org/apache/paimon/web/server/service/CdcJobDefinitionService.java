@@ -18,6 +18,8 @@
 
 package org.apache.paimon.web.server.service;
 
+import org.apache.paimon.web.api.action.context.ActionExecutionResult;
+import org.apache.paimon.web.engine.flink.common.status.JobStatus;
 import org.apache.paimon.web.server.data.dto.CdcJobDefinitionDTO;
 import org.apache.paimon.web.server.data.dto.CdcJobSubmitDTO;
 import org.apache.paimon.web.server.data.model.CdcJobDefinition;
@@ -25,16 +27,26 @@ import org.apache.paimon.web.server.data.result.PageR;
 import org.apache.paimon.web.server.data.result.R;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.apache.paimon.web.server.data.vo.ActionExecutionResultVo;
+import org.apache.paimon.web.server.data.vo.CdcJobDefinitionVO;
 
 /** Cdc Job Definition Service. */
 public interface CdcJobDefinitionService extends IService<CdcJobDefinition> {
 
     R<Void> create(CdcJobDefinitionDTO cdcJobDefinitionDTO);
 
-    PageR<CdcJobDefinition> listAll(
+    PageR<CdcJobDefinitionVO> listAll(
             String name, boolean withConfig, long currentPage, long pageSize);
 
     R<Void> update(CdcJobDefinitionDTO cdcJobDefinitionDTO);
 
-    R<Void> submit(Integer id, CdcJobSubmitDTO cdcJobSubmitDTO);
+    R<ActionExecutionResultVo> submit(Integer id, CdcJobSubmitDTO cdcJobSubmitDTO);
+
+    R<ActionExecutionResultVo> cancel(Integer id);
+
+    R<JobStatus> status(Integer id, Integer logId);
+
+    R<Integer> copy(Integer id);
+
+
 }

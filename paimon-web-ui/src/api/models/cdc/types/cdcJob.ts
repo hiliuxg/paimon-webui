@@ -17,14 +17,16 @@ under the License. */
 
 export interface CdcJobDefinition {
   id?: number
+  name: string
   createTime?: string
   updateTime?: string
-  name: string
   description?: string
   cdcType?: number
   config?: string
   createUser?: string
   dataDelay: number
+  currentStatus?: string
+  logId?: number
 }
 
 export interface CdcJobSubmit {
@@ -32,3 +34,17 @@ export interface CdcJobSubmit {
   startupMode: number
   startupTimestamp?: number
 }
+
+export enum JobStatus {
+  FRESHED = "FRESHED",
+  SUBMITTING = "SUBMITTING",
+  CANCELLING = "CANCELLING",
+  RUNNING = "RUNNING",
+  FAILED = "FAILED",
+  CANCELED = "CANCELED",
+  CREATED = "CREATED",
+  FINISHED = "FINISHED",
+  UNKNOWN = "UNKNOWN",
+}
+
+

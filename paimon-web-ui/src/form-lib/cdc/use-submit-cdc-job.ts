@@ -34,7 +34,9 @@ export function useSumbitCdcJob(item: any) {
   getClusterListByType ('Flink', 1, Number.MAX_SAFE_INTEGER).then((response) => {
     if (response && response.data) {
       const clusterList = response.data as Cluster[]
-      flinkSessionClusterOptions.value = clusterList.map(cluster => ({
+      flinkSessionClusterOptions.value = clusterList.filter(cluster => {
+        return cluster.clusterName == 'yarn-session' || cluster.clusterName == 'k8s-session'
+      }).map(cluster => ({
         label: cluster.clusterName,
         value: cluster.id.toString(),
       }))
@@ -87,9 +89,9 @@ export function useSumbitCdcJob(item: any) {
       {
         type: 'input',
         field: 'startupTimestamp',
-        name: '指定时间',
+        name: t('cdc.startup_timestamp'),
         props: {
-          placeholder: '选择同步模式为指定时间时填写，13位时间戳'
+          placeholder: t('cdc.startup_timestamp_tip')
         },
       },
     ] as IJsonItem[],

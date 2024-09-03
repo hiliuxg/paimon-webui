@@ -15,10 +15,10 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License. */
 
-import type { CdcJobDefinition, CdcJobSubmit } from './interface'
+import type { CdcJobDefinition, CdcJobSubmit } from './types/cdcJob'
 import httpRequest from '@/api/request'
 
-export * from './interface'
+export * from './types/cdcJob'
 
 /**
  * # Create cdc job definition
@@ -54,9 +54,31 @@ export function getCdcJobDefinition(id: number) {
 export function deleteCdcJobDefinition(id: number) {
   return httpRequest.delete(`/cdc-job-definition/${id}`)
 }
+
+/**
+ * # Delete cdc job definition
+ */
+export function copyCdcJobDefinition(id: number) {
+  return httpRequest.put(`/cdc-job-definition/${id}/copy`)
+}
+
 /**
  * # Submit cdc job
  */
 export function submitCdcJob(id: number, form: CdcJobSubmit) {
   return httpRequest.post(`/cdc-job-definition/${id}/submit`, form)
+}
+
+/**
+ * # Submit cdc job
+ */
+export function cancelCdcJob(id: number) {
+  return httpRequest.post(`/cdc-job-definition/${id}/cancel`)
+}
+
+/**
+ * # Get cdc job status
+ */
+export function freshCdcJobStatus(id: number, logId: number) {
+  return httpRequest.get(`/cdc-job-definition/${id}/status?logId=${logId}`)
 }

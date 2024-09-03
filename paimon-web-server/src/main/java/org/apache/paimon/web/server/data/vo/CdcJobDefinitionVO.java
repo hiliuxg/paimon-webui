@@ -16,25 +16,23 @@
  * limitations under the License.
  */
 
-package org.apache.paimon.web.server.data.model;
+package org.apache.paimon.web.server.data.vo;
 
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-/** Model of cdc_job_definition. */
-@TableName(value = "cdc_job_definition")
+import java.time.LocalDateTime;
+
+/** VO of database. */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-@Builder
-public class CdcJobDefinition extends BaseModel implements Serializable {
+public class CdcJobDefinitionVO {
+
+    private Integer id;
 
     private String name;
 
@@ -48,5 +46,11 @@ public class CdcJobDefinition extends BaseModel implements Serializable {
 
     private Integer dataDelay;
 
-    @TableLogic private boolean isDelete;
+    private boolean isDelete;
+
+    private String currentStatus;
+
+    private LocalDateTime createTime;
+
+    private LocalDateTime updateTime;
 }

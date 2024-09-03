@@ -23,6 +23,7 @@ package org.apache.paimon.web.gateway.enums;
  * supported.
  */
 public enum DeploymentMode {
+    K8S_SESSION("k8s-session"),
     YARN_SESSION("yarn-session"),
     FLINK_SQL_GATEWAY("flink-sql-gateway");
 

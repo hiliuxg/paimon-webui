@@ -65,7 +65,7 @@ public class ClusterController {
     @GetMapping("/list")
     public PageR<ClusterInfo> listClusters(ClusterInfo clusterInfo) {
         IPage<ClusterInfo> page = PageSupport.startPage();
-        List<ClusterInfo> clusterInfos = clusterService.listUsers(page, clusterInfo);
+        List<ClusterInfo> clusterInfos = clusterService.listClusters(page, clusterInfo);
         return PageR.<ClusterInfo>builder()
                 .success(true)
                 .total(page.getTotal())

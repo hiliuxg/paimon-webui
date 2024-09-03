@@ -18,35 +18,38 @@
 
 package org.apache.paimon.web.server.data.model;
 
-import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
 
 import java.io.Serializable;
-/** Model of cdc_job_definition. */
-@TableName(value = "cdc_job_definition")
+import java.time.LocalDateTime;
+import java.util.Map;
+
+/** Model of cdc_job_log. */
+@TableName(value = "cdc_job_log")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Builder
-public class CdcJobDefinition extends BaseModel implements Serializable {
+public class CdcJobLog extends BaseModel implements Serializable {
 
-    private String name;
+    private Integer clusterId;
 
-    private String description;
-
-    private Integer cdcType;
-
-    private String config;
+    private Integer cdcJobDefinitionId;
 
     private String createUser;
 
-    private Integer dataDelay;
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime terminateTime;
 
-    @TableLogic private boolean isDelete;
+    private String currentStatus;
+
+    private String flinkJobId;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Map<String, Object> extra;
 }

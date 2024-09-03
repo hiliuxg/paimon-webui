@@ -53,7 +53,7 @@ public class ClusterServiceImpl extends ServiceImpl<ClusterMapper, ClusterInfo>
     @Autowired private ClusterMapper clusterMapper;
 
     @Override
-    public List<ClusterInfo> listUsers(IPage<ClusterInfo> page, ClusterInfo cluster) {
+    public List<ClusterInfo> listClusters(IPage<ClusterInfo> page, ClusterInfo cluster) {
         return clusterMapper.listClusters(page, cluster);
     }
 
@@ -165,4 +165,6 @@ public class ClusterServiceImpl extends ServiceImpl<ClusterMapper, ClusterInfo>
             clusterInfo.setHeartbeatStatus(result.getStatus());
         }
     }
+
+
 }

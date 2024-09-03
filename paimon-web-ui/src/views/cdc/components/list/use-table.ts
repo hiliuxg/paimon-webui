@@ -15,12 +15,14 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License. */
 
-import type { Router } from 'vue-router'
-import { useCDCStore } from '@/store/cdc'
+import type {Router} from 'vue-router'
+import {useCDCStore} from '@/store/cdc'
 import TableAction from '@/components/table-action'
-import { deleteCdcJobDefinition, getCdcJobDefinition, listAllCdcJob } from '@/api/models/cdc'
+import {deleteCdcJobDefinition, getCdcJobDefinition, copyCdcJobDefinition, listAllCdcJob} from '@/api/models/cdc'
+import {JobStatus} from '@/api/models/cdc/types/cdcJob'
+import {NTag} from "naive-ui";
 
-export function useTable(ctx: any) {
+export function useTable(ctx:  any) {
   const router: Router = useRouter()
   const { t } = useLocaleHooks()
   const tableVariables = reactive({
@@ -40,11 +42,6 @@ export function useTable(ctx: any) {
         },
       },
       {
-        title: t('cdc.job_description'),
-        key: 'description',
-        resizable: true,
-      },
-      {
         title: t('cdc.create_user'),
         key: 'createUser',
         resizable: true,
@@ -60,12 +57,33 @@ export function useTable(ctx: any) {
         resizable: true,
       },
       {
+        title: t('cdc.job_current_status'),
+        key: 'currentStatus',
+        resizable: true,
+        render: (row: any) => {
+          const currentStatus = row.currentStatus
+          switch (currentStatus) {
+            case JobStatus.RUNNING:
+              return h(NTag, {type: 'success', size: 'small'}, {default: () => currentStatus})
+            case JobStatus.CANCELED:
+            case JobStatus.FINISHED:
+            case JobStatus.FRESHED:
+              return h(NTag, {type: 'info', size: 'small'}, {default: () => currentStatus})
+            case JobStatus.FAILED:
+            case JobStatus.UNKNOWN:
+              return h(NTag, {type: 'error', size: 'small'}, {default: () => currentStatus})
+            default:
+              return h(NTag, {type: 'warning', size: 'small'}, {default: () => currentStatus})
+          }
+        }
+      },
+      {
         title: t('cdc.operation'),
         key: 'actions',
         render: (row: any) =>
           h(TableAction, {
             row,
-            onHandleEdit: (row) => {
+            onHandleEdit: (row: any) => {
               getCdcJobDefinition(row.id).then((res) => {
                 const CDCStore = useCDCStore()
                 CDCStore.setModel({
@@ -83,12 +101,24 @@ export function useTable(ctx: any) {
             onHandleRun: (row: any) => {
               const CDCStore = useCDCStore()
               CDCStore.setModel({
-                id: row.id,
+                id: row.id
               })
-              ctx.emit('cdcJobSubmit')
+              ctx.emit('cdcJobSubmit', row)
             },
-            onHandleDelete: (row) => {
+            onHandleCancel: (row: any) => {
+              const CDCStore = useCDCStore()
+              CDCStore.setModel({
+                id: row.id
+              })
+              ctx.emit('cdcJobCancel', row)
+            },
+            onHandleDelete: (row: any) => {
               deleteCdcJobDefinition(row.id).then(() => {
+                getTableData()
+              })
+            },
+            onHandleCopy: (row: any) => {
+              copyCdcJobDefinition(row.id).then(() => {
                 getTableData()
               })
             },
@@ -115,7 +145,9 @@ export function useTable(ctx: any) {
   })
 
   function getTableData(jobName?: string) {
-    listAllCdcJob(false, jobName, tableVariables.pagination.page, tableVariables.pagination.pageSize).then(
+    listAllCdcJob(false, jobName,
+        tableVariables.pagination.page,
+        tableVariables.pagination.pageSize).then(
       (res: any) => {
         tableVariables.data = res.data
         tableVariables.pagination.itemCount = res.total

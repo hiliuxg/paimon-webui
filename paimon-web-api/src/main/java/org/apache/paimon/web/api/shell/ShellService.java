@@ -39,9 +39,9 @@ public class ShellService {
     public Process execute() throws IOException {
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.directory(new File(workingDirectory));
-        processBuilder.redirectErrorStream(true);
+        processBuilder.redirectErrorStream(false);
         processBuilder.command(executeCommand);
-        log.info("Executing shell command : {}", String.join(" ", executeCommand));
+        log.info("run shell command : {}", String.join(" ", executeCommand));
         return processBuilder.start();
     }
 }

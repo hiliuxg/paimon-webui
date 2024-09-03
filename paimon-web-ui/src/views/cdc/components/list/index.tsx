@@ -20,7 +20,7 @@ import { useTable } from './use-table'
 
 export default defineComponent({
   name: 'ListPage',
-  emits: ['cdcJobSubmit'],
+  emits: ['cdcJobSubmit', 'cdcJobCancel'],
   setup(_, ctx) {
     const { t } = useLocaleHooks()
 

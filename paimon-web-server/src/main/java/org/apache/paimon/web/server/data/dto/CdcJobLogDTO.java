@@ -16,37 +16,29 @@
  * limitations under the License.
  */
 
-package org.apache.paimon.web.server.data.model;
+package org.apache.paimon.web.server.data.dto;
 
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-/** Model of cdc_job_definition. */
-@TableName(value = "cdc_job_definition")
+import java.time.LocalDateTime;
+import java.util.Map;
+
+/** DTO of cdcJobLog . */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-@Builder
-public class CdcJobDefinition extends BaseModel implements Serializable {
+public class CdcJobLogDTO {
 
-    private String name;
+    private Integer id;
 
-    private String description;
+    private Long clusterId;
 
-    private Integer cdcType;
-
-    private String config;
+    private Long cdcJobDefinitionId;
 
     private String createUser;
 
-    private Integer dataDelay;
+    private String currentStatus;
 
-    @TableLogic private boolean isDelete;
+    private String flinkJobId;
+
+    private Map<String, Object> extra;
+
 }

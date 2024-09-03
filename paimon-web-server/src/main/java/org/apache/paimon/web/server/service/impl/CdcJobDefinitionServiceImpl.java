@@ -18,7 +18,12 @@
 
 package org.apache.paimon.web.server.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.flink.shaded.guava31.com.google.common.cache.CacheBuilder;
+import org.apache.flink.shaded.guava31.com.google.common.cache.CacheLoader;
+import org.apache.flink.shaded.guava31.com.google.common.cache.LoadingCache;
 import org.apache.paimon.web.api.action.context.ActionContext;
+import org.apache.paimon.web.api.action.context.ActionExecutionResult;
 import org.apache.paimon.web.api.action.context.factory.ActionContextFactoryServiceLoadUtil;
 import org.apache.paimon.web.api.action.context.factory.FlinkCdcActionContextFactory;
 import org.apache.paimon.web.api.action.context.options.FlinkCdcOptions;
@@ -29,20 +34,28 @@ import org.apache.paimon.web.api.enums.FlinkCdcDataSourceType;
 import org.apache.paimon.web.api.enums.FlinkCdcSyncType;
 import org.apache.paimon.web.api.enums.SyncMode;
 import org.apache.paimon.web.common.util.JSONUtils;
+import org.apache.paimon.web.engine.flink.common.status.JobStatus;
+import org.apache.paimon.web.engine.flink.sql.gateway.client.SessionClusterClient;
+import org.apache.paimon.web.engine.flink.sql.gateway.model.JobOverviewEntity;
+import org.apache.paimon.web.engine.flink.sql.gateway.model.TriggerIdEntity;
 import org.apache.paimon.web.server.data.dto.CdcJobDefinitionDTO;
 import org.apache.paimon.web.server.data.dto.CdcJobSubmitDTO;
 import org.apache.paimon.web.server.data.model.CatalogInfo;
 import org.apache.paimon.web.server.data.model.CdcJobDefinition;
+import org.apache.paimon.web.server.data.model.CdcJobLog;
 import org.apache.paimon.web.server.data.model.ClusterInfo;
 import org.apache.paimon.web.server.data.model.cdc.CdcGraph;
 import org.apache.paimon.web.server.data.model.cdc.CdcNode;
 import org.apache.paimon.web.server.data.result.PageR;
 import org.apache.paimon.web.server.data.result.R;
 import org.apache.paimon.web.server.data.result.enums.Status;
+import org.apache.paimon.web.server.data.vo.ActionExecutionResultVo;
+import org.apache.paimon.web.server.data.vo.CdcJobDefinitionVO;
 import org.apache.paimon.web.server.data.vo.UserInfoVO;
 import org.apache.paimon.web.server.mapper.CdcJobDefinitionMapper;
 import org.apache.paimon.web.server.service.CatalogService;
 import org.apache.paimon.web.server.service.CdcJobDefinitionService;
+import org.apache.paimon.web.server.service.CdcJobLogService;
 import org.apache.paimon.web.server.service.ClusterService;
 import org.apache.paimon.web.server.util.StringUtils;
 
@@ -55,22 +68,44 @@ import com.google.common.base.Preconditions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
-/** CdcJobDefinitionServiceImpl. */
+/**
+ * CdcJobDefinitionServiceImpl.
+ */
 @Service
+@Slf4j
 public class CdcJobDefinitionServiceImpl
         extends ServiceImpl<CdcJobDefinitionMapper, CdcJobDefinition>
         implements CdcJobDefinitionService {
 
     @Autowired private CatalogService catalogService;
     @Autowired private ClusterService clusterService;
+    @Autowired private CdcJobLogService cdcJobLogService;
+
+    final LoadingCache<Integer, ReentrantLock> cacher =
+            CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.MINUTES)
+                    .build(new CacheLoader<Integer, ReentrantLock>() {
+                        @Override
+                        public ReentrantLock load(Integer id) {
+                            return new ReentrantLock();
+                        }
+                    });
 
     @Override
     public R<Void> create(CdcJobDefinitionDTO cdcJobDefinitionDTO) {
+        // to valid config
+        CdcGraph.fromCdcGraphJsonString(cdcJobDefinitionDTO.getConfig());
+        // to update entity
         String name = cdcJobDefinitionDTO.getName();
         QueryWrapper<CdcJobDefinition> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("name", name);
@@ -100,35 +135,49 @@ public class CdcJobDefinitionServiceImpl
     }
 
     @Override
-    public PageR<CdcJobDefinition> listAll(
+    public PageR<CdcJobDefinitionVO> listAll(
             String name, boolean withConfig, long currentPage, long pageSize) {
         Page<CdcJobDefinition> page = new Page<>(currentPage, pageSize);
         QueryWrapper<CdcJobDefinition> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select(
-                "id",
-                "name",
-                "cdc_type",
-                "create_user",
-                "description",
-                "update_time",
-                "create_time");
-        if (!withConfig) {
-            queryWrapper.select(
-                    "name",
-                    "id",
-                    "description",
-                    "cdc_type",
-                    "create_user",
-                    "update_time",
-                    "create_time");
-        }
+        queryWrapper.select("id", "name", "cdc_type",
+                "create_user", "description", "update_time", "create_time");
         queryWrapper.like(StringUtils.isNotBlank(name), "name", name);
         Page<CdcJobDefinition> resPage = baseMapper.selectPage(page, queryWrapper);
-        return new PageR<>(resPage.getTotal(), true, resPage.getRecords());
+        Page<CdcJobDefinitionVO> voPage = toCdcJobDefinitionVOPage(resPage);
+        return new PageR<>(voPage.getTotal(), true, voPage.getRecords());
+    }
+
+    private Page<CdcJobDefinitionVO> toCdcJobDefinitionVOPage(Page<CdcJobDefinition> resPage) {
+        List<CdcJobDefinitionVO> voList = resPage.getRecords().stream().map(item -> {
+            Integer id = item.getId();
+            CdcJobLog cdcJobLog = cdcJobLogService.findLast(id);
+            String jobStatus = cdcJobLog == null ?
+                    JobStatus.FRESHED.getValue() : cdcJobLog.getCurrentStatus();
+            return CdcJobDefinitionVO.builder()
+                    .id(id)
+                    .cdcType(item.getCdcType())
+                    .isDelete(item.isDelete())
+                    .name(item.getName())
+                    .config(item.getConfig())
+                    .createTime(item.getCreateTime())
+                    .updateTime(item.getUpdateTime())
+                    .description(item.getDescription())
+                    .createUser(item.getCreateUser())
+                    .dataDelay(item.getDataDelay())
+                    .currentStatus(jobStatus)
+                    .build();
+        }).collect(Collectors.toList());
+
+        Page<CdcJobDefinitionVO> voPage =
+                new Page<>(resPage.getCurrent(), resPage.getSize(), resPage.getSize());
+        return voPage.setRecords(voList);
     }
 
     @Override
     public R<Void> update(CdcJobDefinitionDTO cdcJobDefinitionDTO) {
+        // to valid config
+        CdcGraph.fromCdcGraphJsonString(cdcJobDefinitionDTO.getConfig());
+        // to update entity
         QueryWrapper<CdcJobDefinition> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("id", cdcJobDefinitionDTO.getId());
         if (!baseMapper.exists(queryWrapper)) {
@@ -148,20 +197,214 @@ public class CdcJobDefinitionServiceImpl
         return R.succeed();
     }
 
+    /**
+     * to submit cdc job to cluster
+     * Use ReentrantLock to ensure that submission, cancellation,
+     * and status retrieval for the same job are atomic operations.
+     * @see CdcJobDefinitionServiceImpl#cancel(Integer)
+     * @see CdcJobDefinitionServiceImpl#status(Integer, Integer)
+     * @param id cdc job id
+     * @param cdcJobSubmitDTO cdc job dto
+     * @return action execution result
+     */
     @Override
-    public R<Void> submit(Integer id, CdcJobSubmitDTO cdcJobSubmitDTO) {
+    public R<ActionExecutionResultVo> submit(Integer id, CdcJobSubmitDTO cdcJobSubmitDTO) {
+        ReentrantLock lock = cacher.getUnchecked(id);
+        if (lock.isLocked()){
+            return R.of(null,
+                    Status.CDC_JOB_FLINK_JOB_LOCKED.getCode(),
+                    Status.CDC_JOB_FLINK_JOB_LOCKED.getMsg());
+        }
+        lock.lock();
+        try {
+            CdcJobDefinition cdcJobDefinition = baseMapper.selectById(id);
+            FlinkCdcSyncType flinkCdcSyncType = FlinkCdcSyncType.valueOf(cdcJobDefinition.getCdcType());
+            CdcGraph cdcGraph = CdcGraph.fromCdcGraphJsonString(cdcJobDefinition.getConfig());
+            String clusterId = cdcJobSubmitDTO.getClusterId();
+            ObjectNode actionConfigs = JSONUtils.createObjectNode();
+            handBaseActionConfig(actionConfigs, clusterId, cdcJobDefinition);
+            handleCdcGraphNodeData(actionConfigs, cdcGraph.getSource(), flinkCdcSyncType, cdcJobSubmitDTO);
+            handleCdcGraphNodeData(actionConfigs, cdcGraph.getTarget(), flinkCdcSyncType, cdcJobSubmitDTO);
+
+            FlinkCdcActionContextFactory factory =
+                    ActionContextFactoryServiceLoadUtil.getFlinkCdcActionContextFactory(
+                            cdcGraph.getSource().getType(),
+                            cdcGraph.getTarget().getType(),
+                            flinkCdcSyncType);
+            ActionContext actionContext = factory.getActionContext(actionConfigs);
+
+            ActionService actionService = new FlinkCdcActionService();
+            ActionExecutionResult result = actionService.execute(actionContext);
+            return createCdcJobLog(result, clusterId, id);
+        } catch (Exception e) {
+            log.error("error while submit job of {} to cluster", id, e);
+            return R.failed(Status.UNKNOWN_ERROR);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * to cancel cdc job from cluster
+     * Use ReentrantLock to ensure that submission, cancellation,
+     * and status retrieval for the same job are atomic operations.
+     * @see CdcJobDefinitionServiceImpl#submit(Integer, CdcJobSubmitDTO)
+     * @see CdcJobDefinitionServiceImpl#status(Integer, Integer)
+     * @param id cdc job id
+     * @return action execution result
+     */
+    @Override
+    public R<ActionExecutionResultVo> cancel(Integer id) {
+        ReentrantLock lock = cacher.getUnchecked(id);
+        if (lock.isLocked()){
+            return R.of(null,
+                    Status.CDC_JOB_FLINK_JOB_LOCKED.getCode(),
+                    Status.CDC_JOB_FLINK_JOB_LOCKED.getMsg());
+        }
+        lock.lock();
+        try {
+            CdcJobLog cdcJobLog = cdcJobLogService.findLast(id);
+            String flinkJobId = cdcJobLog.getFlinkJobId();
+            if (flinkJobId == null) {
+                return R.of(null,
+                        Status.CDC_JOB_FLINK_JOB_ID_NOT_EXISTS.getCode(),
+                        Status.CDC_JOB_FLINK_JOB_ID_NOT_EXISTS.getMsg());
+            }
+            // request remote to cancel flink job
+            ClusterInfo clusterInfo = clusterService.getById(cdcJobLog.getClusterId());
+            SessionClusterClient client = new SessionClusterClient(
+                    clusterInfo.getHost(), clusterInfo.getPort());
+            TriggerIdEntity triggerIdEntity = client.stopWithSavePoint(flinkJobId);
+            if (triggerIdEntity != null) {
+                cdcJobLog.setCurrentStatus(JobStatus.CANCELLING.getValue());
+                cdcJobLogService.updateById(cdcJobLog);
+                ActionExecutionResultVo actionExecutionResultVo =
+                        new ActionExecutionResultVo(cdcJobLog.getId(), true,
+                                Status.SUCCESS.getMsg(), JobStatus.CANCELLING);
+                return R.succeed(actionExecutionResultVo);
+            } else {
+                throw new RuntimeException("cancel job return null triggerIdEntity");
+            }
+        } catch (Exception ex) {
+            log.error(
+                    "An exception occurred while cancel job status of {}",
+                    id, ex);
+            return R.failed(Status.UNKNOWN_ERROR);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * to fetch cdc job status from cluster
+     * Use ReentrantLock to ensure that submission, cancellation,
+     * and status retrieval for the same job are atomic operations.
+     * @see CdcJobDefinitionServiceImpl#submit(Integer, CdcJobSubmitDTO)
+     * @see CdcJobDefinitionServiceImpl#cancel(Integer)
+     * @param id cdc job id
+     * @return action execution result
+     */
+    @Override
+    public R<JobStatus> status(Integer id, Integer logId) {
+        ReentrantLock lock = cacher.getUnchecked(id);
+        if (lock.isLocked()){
+            return R.of(null,
+                    Status.CDC_JOB_FLINK_JOB_LOCKED.getCode(),
+                    Status.CDC_JOB_FLINK_JOB_LOCKED.getMsg());
+        }
+        lock.lock();
+        CdcJobLog cdcJobLog = cdcJobLogService.getById(logId);
+        try {
+            ClusterInfo clusterInfo = clusterService.getById(cdcJobLog.getClusterId());
+            String flinkJobId = cdcJobLog.getFlinkJobId();
+            if (flinkJobId == null) {
+                throw new RuntimeException("flink job id is null");
+            } else {
+                SessionClusterClient client = new SessionClusterClient(
+                        clusterInfo.getHost(), clusterInfo.getPort());
+                JobOverviewEntity jobOverview = client.jobOverview(cdcJobLog.getFlinkJobId());
+                if (jobOverview != null && jobOverview.getState() != null) {
+                    JobStatus jobStatus = JobStatus.fromValue(jobOverview.getState());
+                    Instant instant = Instant.ofEpochMilli(jobOverview.getEndTime());
+                    LocalDateTime terminateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+                    cdcJobLog.setCurrentStatus(jobStatus.getValue());
+                    cdcJobLog.setTerminateTime(terminateTime);
+                    cdcJobLogService.updateById(cdcJobLog);
+                    return R.succeed(jobStatus);
+                } else {
+                    throw new RuntimeException("find null jobOverview");
+                }
+            }
+        } catch (Exception ex) {
+            log.error(
+                    "An exception occurred while refresh job status of {}-{}",
+                    id, logId, ex);
+            cdcJobLog.setCurrentStatus(JobStatus.UNKNOWN.getValue());
+            cdcJobLogService.updateById(cdcJobLog);
+            return R.failed(JobStatus.UNKNOWN);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public R<Integer> copy(Integer id) {
         CdcJobDefinition cdcJobDefinition = baseMapper.selectById(id);
-        String config = cdcJobDefinition.getConfig();
-        FlinkCdcSyncType flinkCdcSyncType = FlinkCdcSyncType.valueOf(cdcJobDefinition.getCdcType());
-        ActionService actionService = new FlinkCdcActionService();
-        CdcGraph cdcGraph = CdcGraph.fromCdcGraphJsonString(config);
-        FlinkCdcActionContextFactory factory =
-                ActionContextFactoryServiceLoadUtil.getFlinkCdcActionContextFactory(
-                        cdcGraph.getSource().getType(),
-                        cdcGraph.getTarget().getType(),
-                        flinkCdcSyncType);
-        ObjectNode actionConfigs = JSONUtils.createObjectNode();
-        String clusterId = cdcJobSubmitDTO.getClusterId();
+        String createUser = getLoginUser().getUser().getUsername();
+        int maxId = getMaxId() + 1;
+        CdcJobDefinition entity = CdcJobDefinition.builder()
+                .cdcType(cdcJobDefinition.getCdcType())
+                .dataDelay(cdcJobDefinition.getDataDelay())
+                .name(String.format("%s-%s", cdcJobDefinition.getName(), maxId))
+                .config(cdcJobDefinition.getConfig())
+                .description(cdcJobDefinition.getDescription())
+                .createUser(createUser)
+                .build();
+
+        int rowId = baseMapper.insert(entity);
+        return R.succeed(rowId);
+    }
+
+    private Integer getMaxId() {
+        QueryWrapper<CdcJobDefinition> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("MAX(id) as max_id")
+                .last(" OR is_delete=1");
+        return baseMapper.selectObjs(queryWrapper)
+                .stream()
+                .map(item -> (Integer) item)
+                .findFirst().orElse(0);
+    }
+
+    private UserInfoVO getLoginUser() {
+        return (UserInfoVO) StpUtil.getSession().get(Integer.toString(StpUtil.getLoginIdAsInt()));
+    }
+
+    private R<ActionExecutionResultVo> createCdcJobLog(ActionExecutionResult result,
+                                                       String clusterId, Integer id) {
+        String createUser = getLoginUser().getUser().getUsername();
+        CdcJobLog cdcJobLog;
+        JobStatus jobStatus = result.isSuccess() ? JobStatus.SUBMITTING : JobStatus.FAILED;
+        String errorMsg = result.isSuccess() ? R.succeed().getMsg() : R.failed().getMsg();
+        String flinkJobId = result.getFlinkJobId();
+        cdcJobLog = CdcJobLog.builder()
+                .clusterId(Integer.parseInt(clusterId))
+                .cdcJobDefinitionId(id)
+                .createUser(createUser)
+                .flinkJobId(flinkJobId)
+                .currentStatus(jobStatus.getValue())
+                .build();
+        cdcJobLogService.save(cdcJobLog);
+        ActionExecutionResultVo actionExecutionResultVo = ActionExecutionResultVo.builder()
+                .jobStatus(jobStatus)
+                .success(result.isSuccess())
+                .errorMsg(errorMsg)
+                .logId(cdcJobLog.getId())
+                .build();
+        return R.succeed(actionExecutionResultVo);
+    }
+
+    private void handBaseActionConfig(ObjectNode actionConfigs, String clusterId,
+                                      CdcJobDefinition cdcJobDefinition) {
         ClusterInfo clusterInfo = clusterService.getById(clusterId);
         actionConfigs.put(
                 FlinkCdcOptions.SESSION_URL,
@@ -170,16 +413,6 @@ public class CdcJobDefinitionServiceImpl
                 FlinkCdcOptions.PIPELINE_NAME, cdcJobDefinition.getName());
         actionConfigs.put(
                 FlinkCdcOptions.EXE_CP_INTERVAL, cdcJobDefinition.getDataDelay());
-
-        handleCdcGraphNodeData(actionConfigs, cdcGraph.getSource(), flinkCdcSyncType, cdcJobSubmitDTO);
-        handleCdcGraphNodeData(actionConfigs, cdcGraph.getTarget(), flinkCdcSyncType, cdcJobSubmitDTO);
-        ActionContext actionContext = factory.getActionContext(actionConfigs);
-        try {
-            actionService.execute(actionContext);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return R.succeed();
     }
 
     private void handleCdcGraphNodeData(
@@ -254,7 +487,7 @@ public class CdcJobDefinitionServiceImpl
                 buildKeyValueString("password", JSONUtils.getString(mysqlData, "password")));
 
         SyncMode syncMode = SyncMode.valueOf(cdcJobSubmitDTO.getStartupMode());
-        switch (syncMode){
+        switch (syncMode) {
             case INCREMENTAL_SYNC:
                 mysqlConfList.add(
                         buildKeyValueString("scan.startup.mode", "latest-offset"));
@@ -298,9 +531,7 @@ public class CdcJobDefinitionServiceImpl
         PaimonServiceFactory.convertToPaimonOptions(options)
                 .toMap()
                 .forEach(
-                        (k, v) -> {
-                            catalogConfList.add(buildKeyValueString(k, v));
-                        });
+                        (k, v) -> catalogConfList.add(buildKeyValueString(k, v)));
 
         actionConfigs.putPOJO(FlinkCdcOptions.CATALOG_CONF, catalogConfList);
     }

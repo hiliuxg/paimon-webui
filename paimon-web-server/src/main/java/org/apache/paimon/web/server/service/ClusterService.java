@@ -29,7 +29,7 @@ import java.util.List;
 /** Cluster Service. */
 public interface ClusterService extends IService<ClusterInfo> {
 
-    List<ClusterInfo> listUsers(IPage<ClusterInfo> page, @Param("cluster") ClusterInfo cluster);
+    List<ClusterInfo> listClusters(IPage<ClusterInfo> page, @Param("cluster") ClusterInfo cluster);
 
     boolean checkClusterNameUnique(ClusterInfo cluster);
 

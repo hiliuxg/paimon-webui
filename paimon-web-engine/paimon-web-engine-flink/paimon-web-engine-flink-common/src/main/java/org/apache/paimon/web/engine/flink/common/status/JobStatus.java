@@ -20,11 +20,15 @@ package org.apache.paimon.web.engine.flink.common.status;
 
 /** Represents the various states that a job. */
 public enum JobStatus {
+    FRESHED("FRESHED"),
+    CANCELLING("CANCELLING"),
+    SUBMITTING("SUBMITTING"),
     CREATED("CREATED"),
     RUNNING("RUNNING"),
     FINISHED("FINISHED"),
     FAILED("FAILED"),
-    CANCELED("CANCELED");
+    CANCELED("CANCELED"),
+    UNKNOWN("UNKNOWN");
 
     private final String value;
 

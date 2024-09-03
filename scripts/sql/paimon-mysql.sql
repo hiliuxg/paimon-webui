@@ -157,6 +157,21 @@ CREATE TABLE if not exists `cdc_job_definition`
     unique (`name`)
 ) engine = innodb;
 
+DROP TABLE IF EXISTS `cdc_job_log`;
+CREATE TABLE if not exists `cdc_job_log`
+(
+    id          int(11)  not null auto_increment primary key comment 'id',
+    cluster_id  int(11)                        not null comment 'cluster id',
+    cdc_job_definition_id int (11)             not null comment 'cdc job definition id',
+    create_user varchar(20)                    not null comment 'create user',
+    create_time datetime default CURRENT_TIMESTAMP null comment 'create time',
+    update_time datetime default CURRENT_TIMESTAMP null comment 'update time',
+    terminate_time datetime default null comment 'terminate time',
+    current_status  varchar(16)  not null comment 'cdc job current SUBMITTING, CREATED, RUNNING, FAILED, FINISHED, CANCELED',
+    flink_job_id varchar(32)                    default null comment 'flink job id',
+    extra text default null comment 'extra json'
+    ) engine = innodb;
+
 CREATE TABLE if not exists `job`
 (
     `id`          int(11)     not null auto_increment primary key comment 'id',
