@@ -19,8 +19,8 @@
 package org.apache.paimon.web.engine.flink.sql.gateway.client;
 
 import org.apache.paimon.web.engine.flink.common.status.HeartbeatStatus;
-import org.apache.paimon.web.engine.flink.sql.gateway.model.JobOverviewEntity;
 import org.apache.paimon.web.engine.flink.sql.gateway.model.HeartbeatEntity;
+import org.apache.paimon.web.engine.flink.sql.gateway.model.JobOverviewEntity;
 import org.apache.paimon.web.engine.flink.sql.gateway.model.TriggerIdEntity;
 import org.apache.paimon.web.engine.flink.sql.gateway.utils.SqlGateWayRestClient;
 
@@ -64,7 +64,7 @@ public class SessionClusterClient implements HeartbeatAction, FlinkJobAction {
                         .build();
             }
         } catch (Exception ex) {
-            //log.error(
+            // log.error(
             //        "An exception occurred while obtaining the cluster status :{}",
             //        ex.getMessage(),
             //        ex);
@@ -77,17 +77,17 @@ public class SessionClusterClient implements HeartbeatAction, FlinkJobAction {
     public JobOverviewEntity jobOverview(String jobId) {
         try {
             return restClient
-                .sendRequest(
-                    new JobOverViewHeaders(jobId),
-                    new JobIdMessageParameters(jobId),
-                    EmptyRequestBody.getInstance())
-                .get();
+                    .sendRequest(
+                            new JobOverViewHeaders(jobId),
+                            new JobIdMessageParameters(jobId),
+                            EmptyRequestBody.getInstance())
+                    .get();
         } catch (Exception ex) {
-           log.error(
-                   "An exception occurred while request job of {} overview: {}",
-                   jobId,
-                   ex.getMessage(),
-                   ex);
+            log.error(
+                    "An exception occurred while request job of {} overview: {}",
+                    jobId,
+                    ex.getMessage(),
+                    ex);
         }
         return null;
     }

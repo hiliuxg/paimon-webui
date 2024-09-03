@@ -54,15 +54,21 @@ public class MysqlSyncDatabasesActionContextFactory implements FlinkCdcActionCon
     @Override
     public ActionContext getActionContext(ObjectNode actionConfigs) {
         return MysqlSyncDatabaseActionContext.builder()
-                .sessionUrl(Optional.of(String.valueOf(actionConfigs.get(FlinkCdcOptions.SESSION_URL))))
+                .sessionUrl(
+                        Optional.of(String.valueOf(actionConfigs.get(FlinkCdcOptions.SESSION_URL))))
                 .flinkJobType(Optional.of(FlinkJobType.SESSION))
                 .warehouse(JSONUtils.getString(actionConfigs, FlinkCdcOptions.WAREHOUSE))
                 .database(JSONUtils.getString(actionConfigs, FlinkCdcOptions.DATABASE))
                 .actionPath(ActionContextUtil.getActionJarPath())
                 .catalogConfList(JSONUtils.getList(actionConfigs, FlinkCdcOptions.CATALOG_CONF))
                 .mysqlConfList(JSONUtils.getList(actionConfigs, FlinkCdcOptions.MYSQL_CONF))
-                .executionCheckPointInterval(Optional.of(JSONUtils.getInteger(actionConfigs, FlinkCdcOptions.EXE_CP_INTERVAL)))
-                .pipelineName(Optional.of(JSONUtils.getString(actionConfigs, FlinkCdcOptions.PIPELINE_NAME)))
+                .executionCheckPointInterval(
+                        Optional.of(
+                                JSONUtils.getInteger(
+                                        actionConfigs, FlinkCdcOptions.EXE_CP_INTERVAL)))
+                .pipelineName(
+                        Optional.of(
+                                JSONUtils.getString(actionConfigs, FlinkCdcOptions.PIPELINE_NAME)))
                 .build();
     }
 }

@@ -18,18 +18,14 @@
 
 package org.apache.paimon.web.server.service.impl;
 
+import org.apache.paimon.web.server.data.model.CdcJobLog;
+import org.apache.paimon.web.server.mapper.CdcJobLogMapper;
+import org.apache.paimon.web.server.service.CdcJobLogService;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.paimon.web.engine.flink.common.status.JobStatus;
-import org.apache.paimon.web.server.data.model.CdcJobLog;
-import org.apache.paimon.web.server.data.result.R;
-import org.apache.paimon.web.server.mapper.CdcJobLogMapper;
-import org.apache.paimon.web.server.service.CdcJobLogService;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-
 
 /** CdcJobLogImpl. */
 @Service
@@ -42,9 +38,8 @@ public class CdcJobLogImpl extends ServiceImpl<CdcJobLogMapper, CdcJobLog>
         QueryWrapper<CdcJobLog> queryWrapper = new QueryWrapper<>();
         queryWrapper
                 .eq("cdc_job_definition_id", cdcJobDefinitionId)
-                .orderByDesc("create_time").last("LIMIT 1");
+                .orderByDesc("create_time")
+                .last("LIMIT 1");
         return baseMapper.selectOne(queryWrapper);
     }
-
-
 }

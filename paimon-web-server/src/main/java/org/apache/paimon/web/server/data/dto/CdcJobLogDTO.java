@@ -20,7 +20,6 @@ package org.apache.paimon.web.server.data.dto;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
 /** DTO of cdcJobLog . */
@@ -40,5 +39,4 @@ public class CdcJobLogDTO {
     private String flinkJobId;
 
     private Map<String, Object> extra;
-
 }

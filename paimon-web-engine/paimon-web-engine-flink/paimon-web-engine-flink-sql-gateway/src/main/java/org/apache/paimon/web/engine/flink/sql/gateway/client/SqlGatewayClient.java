@@ -268,7 +268,7 @@ public class SqlGatewayClient implements HeartbeatAction {
                         .build();
             }
         } catch (Exception exec) {
-            //log.error(
+            // log.error(
             //        "An exception occurred while obtaining the cluster status :{}",
             //        exec.getMessage(),
             //        exec);

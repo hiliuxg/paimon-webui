@@ -27,6 +27,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+
 /** Model of cdc_job_definition. */
 @TableName(value = "cdc_job_definition")
 @Data

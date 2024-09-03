@@ -18,9 +18,8 @@
 
 package org.apache.paimon.web.server.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.apache.ibatis.annotations.Mapper;
 import org.apache.paimon.web.server.data.model.CdcJobLog;
 
-public interface CdcJobLogMapper extends BaseMapper<CdcJobLog> {
-}
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+public interface CdcJobLogMapper extends BaseMapper<CdcJobLog> {}

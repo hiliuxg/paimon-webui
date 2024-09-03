@@ -47,8 +47,7 @@ public class ActionExecutionResult {
         return errorMsg;
     }
 
-    public String getFlinkJobId(){
+    public String getFlinkJobId() {
         return flinkJobId;
     }
-
 }

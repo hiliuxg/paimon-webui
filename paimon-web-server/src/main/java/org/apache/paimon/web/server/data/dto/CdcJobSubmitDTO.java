@@ -28,5 +28,4 @@ public class CdcJobSubmitDTO {
     private Long startupTimestamp;
     private Integer startupMode;
     private String createUser;
-
 }

@@ -103,7 +103,8 @@ public class CdcJobDefinitionController {
 
     @SaCheckPermission("cdc:job:submit")
     @PostMapping("{id}/submit")
-    public R<ActionExecutionResultVo> submit(@PathVariable Integer id, @RequestBody CdcJobSubmitDTO cdcJobSubmitDTO) {
+    public R<ActionExecutionResultVo> submit(
+            @PathVariable Integer id, @RequestBody CdcJobSubmitDTO cdcJobSubmitDTO) {
         return cdcJobDefinitionService.submit(id, cdcJobSubmitDTO);
     }
 
@@ -115,10 +116,7 @@ public class CdcJobDefinitionController {
 
     @SaCheckPermission("cdc:job:status")
     @GetMapping("{id}/status")
-    public R<JobStatus> status(@PathVariable Integer id,
-                               @RequestParam Integer logId) {
+    public R<JobStatus> status(@PathVariable Integer id, @RequestParam Integer logId) {
         return cdcJobDefinitionService.status(id, logId);
     }
-
-
 }

@@ -24,7 +24,6 @@ import org.apache.paimon.web.engine.flink.sql.gateway.model.TriggerIdEntity;
 /** Using to execute flink job action. */
 public interface FlinkJobAction {
 
-
     /**
      * Execute cluster action to get job overview.
      *
@@ -40,6 +39,4 @@ public interface FlinkJobAction {
      * @return return a 'triggerId' for further query identifier.
      */
     TriggerIdEntity stopWithSavePoint(String jobId);
-
-
 }

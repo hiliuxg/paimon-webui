@@ -18,9 +18,9 @@
 
 package org.apache.paimon.web.server.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
 import org.apache.paimon.web.server.data.model.CdcJobLog;
-import org.apache.paimon.web.server.data.result.R;
+
+import com.baomidou.mybatisplus.extension.service.IService;
 
 /** Cdc Job Log Service. */
 public interface CdcJobLogService extends IService<CdcJobLog> {

@@ -165,6 +165,4 @@ public class ClusterServiceImpl extends ServiceImpl<ClusterMapper, ClusterInfo>
             clusterInfo.setHeartbeatStatus(result.getStatus());
         }
     }
-
-
 }
