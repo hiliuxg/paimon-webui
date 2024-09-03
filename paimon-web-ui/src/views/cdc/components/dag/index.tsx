@@ -15,13 +15,13 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License. */
 
-import { Leaf, Save } from '@vicons/ionicons5'
+import { Leaf } from '@vicons/ionicons5'
 import type { Router } from 'vue-router'
 import styles from './index.module.scss'
 import DagCanvas from './dag-canvas'
 import { useCDCStore } from '@/store/cdc'
-import {type CdcJobDefinition, createCdcJob, updateCdcJob} from '@/api/models/cdc'
-import Modal from "@/components/modal";
+import { type CdcJobDefinition, createCdcJob, updateCdcJob } from '@/api/models/cdc'
+import Modal from '@/components/modal'
 
 export default defineComponent({
   name: 'DagPage',
@@ -33,11 +33,11 @@ export default defineComponent({
 
     const showModalRef = ref(false)
     const CDCModalRef = ref()
-    const row =  reactive({
+    const row = reactive({
       name: '',
       description: '',
       cdcType: 0,
-      dataDelay: 60 * 1000
+      dataDelay: 60 * 1000,
     })
     const name = ref('')
     const dagRef = ref() as any
@@ -82,7 +82,7 @@ export default defineComponent({
     const handleSave = () => {
       const editMode = CDCStore.getModel.editMode
       const config = dagRef.value.graph.toJSON()
-      if(config.cells.length == 0) {
+      if (config.cells.length === 0) {
         message.warning(t('cdc.cdc_job_save_not_null'))
         return
       }
@@ -91,7 +91,7 @@ export default defineComponent({
         description: CDCStore.getModel.description,
         cdcType: CDCStore.getModel.cdcType,
         config: JSON.stringify(config),
-        dataDelay: CDCStore.getModel.dataDelay
+        dataDelay: CDCStore.getModel.dataDelay,
       }
       if (editMode === 'edit') {
         jobParam.id = CDCStore.getModel.id
@@ -149,15 +149,15 @@ export default defineComponent({
               </div>
             </div>
             {this.showModalRef && (
-                <Modal
-                    ref="CDCModalRef"
-                    row={this.row}
-                    showModal={this.showModalRef}
-                    title={this.t('cdc.cdc_job_info')}
-                    formType="CDCLIST"
-                    onCancel={() => (this.showModalRef = false)}
-                    onConfirm={this.handleConfirm}
-                />
+              <Modal
+                ref="CDCModalRef"
+                row={this.row}
+                showModal={this.showModalRef}
+                title={this.t('cdc.cdc_job_info')}
+                formType="CDCLIST"
+                onCancel={() => (this.showModalRef = false)}
+                onConfirm={this.handleConfirm}
+              />
             )}
           </n-card>
           <DagCanvas ref="dagRef"></DagCanvas>

@@ -249,11 +249,14 @@ export default defineComponent({
     const onSearch = async (e: KeyboardEvent) => {
       if (e.code === 'Enter') {
         isSearch.value = Boolean(filterValue.value)
-        filterValue.value
-          ? await catalogStore.getTablesByDataBaseId({
+        if (filterValue.value) {
+          await catalogStore.getTablesByDataBaseId({
             name: filterValue.value,
           })
-          : await catalogStore.getAllCatalogs(true)
+        }
+        else {
+          await catalogStore.getAllCatalogs(true)
+        }
       }
     }
 

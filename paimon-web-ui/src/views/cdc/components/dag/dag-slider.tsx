@@ -38,7 +38,7 @@ export default defineComponent({
           name: 'MySQL',
           value: 'MYSQL',
           type: 'INPUT',
-        }
+        },
       ],
       sinkList: [
         {
@@ -68,7 +68,7 @@ export default defineComponent({
   render() {
     return (
       <div class={styles['dag-slider']} id="dag-slider">
-        <n-card class={styles.card} >
+        <n-card class={styles.card}>
           <n-space vertical>
             <div class={styles.source}>
               <n-space vertical size={15}>

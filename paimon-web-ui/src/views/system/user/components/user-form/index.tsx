@@ -88,27 +88,33 @@ export default defineComponent({
     )
 
     const handleCloseModal = () => {
-      props['onUpdate:visible'] && props['onUpdate:visible'](false)
+      if (props['onUpdate:visible']) {
+        props['onUpdate:visible'](false)
+      }
       resetState()
     }
 
     async function handleConfirm() {
       await formRef.value.validate()
-      props && props.onConfirm && props.onConfirm()
+      if (props && props.onConfirm) {
+        props.onConfirm()
+      }
       handleCloseModal()
       resetState()
     }
 
     function resetState() {
-      props['onUpdate:formValue'] && props['onUpdate:formValue']({
-        username: '',
-        nickname: '',
-        password: '',
-        enabled: true,
-        mobile: '',
-        email: '',
-        roleIds: undefined,
-      })
+      if (props['onUpdate:formValue']) {
+        props['onUpdate:formValue']({
+          username: '',
+          nickname: '',
+          password: '',
+          enabled: true,
+          mobile: '',
+          email: '',
+          roleIds: undefined,
+        })
+      }
     }
 
     return {

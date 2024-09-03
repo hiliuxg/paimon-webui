@@ -34,8 +34,8 @@ export function useSumbitCdcJob(item: any) {
   getClusterListByType ('Flink', 1, Number.MAX_SAFE_INTEGER).then((response) => {
     if (response && response.data) {
       const clusterList = response.data as Cluster[]
-      flinkSessionClusterOptions.value = clusterList.filter(cluster => {
-        return cluster.clusterName == 'yarn-session' || cluster.clusterName == 'k8s-session'
+      flinkSessionClusterOptions.value = clusterList.filter((cluster) => {
+        return cluster.clusterName === 'yarn-session' || cluster.clusterName === 'k8s-session'
       }).map(cluster => ({
         label: cluster.clusterName,
         value: cluster.id.toString(),
@@ -55,7 +55,7 @@ export function useSumbitCdcJob(item: any) {
     {
       label: t('cdc.ts_synchronization'),
       value: 2,
-    }
+    },
 
   ]
 
@@ -91,7 +91,7 @@ export function useSumbitCdcJob(item: any) {
         field: 'startupTimestamp',
         name: t('cdc.startup_timestamp'),
         props: {
-          placeholder: t('cdc.startup_timestamp_tip')
+          placeholder: t('cdc.startup_timestamp_tip'),
         },
       },
     ] as IJsonItem[],

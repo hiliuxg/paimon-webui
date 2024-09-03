@@ -84,7 +84,9 @@ export default defineComponent({
     const formRef = ref()
 
     const handleCloseModal = () => {
-      props['onUpdate:visible'] && props['onUpdate:visible'](false)
+      if (props['onUpdate:visible']) {
+        props['onUpdate:visible'](false)
+      }
       resetState()
     }
 
@@ -102,20 +104,24 @@ export default defineComponent({
 
     const handleConfirm = async () => {
       await formRef.value.validate()
-      props && props.onConfirm && props.onConfirm()
+      if (props && props.onConfirm) {
+        props.onConfirm()
+      }
       handleCloseModal()
       resetState()
     }
 
     function resetState() {
-      props['onUpdate:formValue'] && props['onUpdate:formValue']({
-        roleName: '',
-        roleKey: '',
-        enabled: true,
-        remark: '',
-        menuIds: [],
-        indeterminateKeys: [],
-      })
+      if (props['onUpdate:formValue']) {
+        props['onUpdate:formValue']({
+          roleName: '',
+          roleKey: '',
+          enabled: true,
+          remark: '',
+          menuIds: [],
+          indeterminateKeys: [],
+        })
+      }
     }
 
     return {

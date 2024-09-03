@@ -33,27 +33,27 @@ export function useCDCList(item: any) {
 
   const dataDelayModelOptions = [
     {
-      label: "1min",
+      label: '1min',
       value: 60 * 1000,
     },
     {
-      label: "5min",
+      label: '5min',
       value: 5 * 60 * 1000,
     },
     {
-      label: "10min",
+      label: '10min',
       value: 10 * 60 * 1000,
     },
     {
-      label: "15min",
+      label: '15min',
       value: 15 * 60 * 1000,
     },
     {
-      label: "30min",
+      label: '30min',
       value: 30 * 60 * 1000,
     },
     {
-      label: "1hour",
+      label: '1hour',
       value: 60 * 60 * 1000,
     },
   ]
@@ -91,7 +91,7 @@ export function useCDCList(item: any) {
         name: t('cdc.task_description'),
         props: {
           placeholder: '',
-          type: 'textarea'
+          type: 'textarea',
         },
       },
       {
@@ -99,7 +99,7 @@ export function useCDCList(item: any) {
         field: 'dataDelay',
         name: t('cdc.data_delay_option'),
         options: dataDelayModelOptions,
-        value: model.dataDelay ,
+        value: model.dataDelay,
       },
       {
         type: 'radio',

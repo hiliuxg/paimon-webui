@@ -79,7 +79,9 @@ function fileDisplay(filePath) {
             if (isFile) {
               const res = read(filedir)
               const fileName = path.basename(filedir)
-              res && console.log(`success file: ${fileName}`)
+              if (res) {
+                console.log(`success file: ${fileName}`)
+              }
             }
             if (isDir)
               fileDisplay(filedir)

@@ -45,8 +45,6 @@ pnpm dev
 pnpm dev:mock & pnpm run mock
 ```
 
-
-
 ### Type-Check, Compile and Minify for Production
 
 ```sh
@@ -68,4 +66,3 @@ You can run this command to automatically generate the corresponding protocol be
 ```sh
 pnpm run gen:license
 ```
-

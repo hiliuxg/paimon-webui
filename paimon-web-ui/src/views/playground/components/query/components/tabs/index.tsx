@@ -58,7 +58,9 @@ export default defineComponent({
       tabVariables.panelsList.find((item: any) => item.key === tabVariables.chooseTab).content = toRaw(editorVariables.editor).getValue()
       handleFormat()
       tabVariables.panelsList.find((item: any) => item.key === tabVariables.chooseTab).isSaved = true
-      menuTreeRef.value && menuTreeRef.value?.onLoadRecordData()
+      if (menuTreeRef.value && menuTreeRef.value.onLoadRecordData) {
+        menuTreeRef.value.onLoadRecordData()
+      }
     }
 
     const handleContentChange = (value: string) => {

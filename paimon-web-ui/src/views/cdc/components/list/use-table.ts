@@ -15,14 +15,14 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License. */
 
-import type {Router} from 'vue-router'
-import {useCDCStore} from '@/store/cdc'
+import type { Router } from 'vue-router'
+import { NTag } from 'naive-ui'
+import { useCDCStore } from '@/store/cdc'
 import TableAction from '@/components/table-action'
-import {deleteCdcJobDefinition, getCdcJobDefinition, copyCdcJobDefinition, listAllCdcJob} from '@/api/models/cdc'
-import {JobStatus} from '@/api/models/cdc/types/cdcJob'
-import {NTag} from "naive-ui";
+import { copyCdcJobDefinition, deleteCdcJobDefinition, getCdcJobDefinition, listAllCdcJob } from '@/api/models/cdc'
+import { JobStatus } from '@/api/models/cdc/types/cdcJob'
 
-export function useTable(ctx:  any) {
+export function useTable(ctx: any) {
   const router: Router = useRouter()
   const { t } = useLocaleHooks()
   const tableVariables = reactive({
@@ -64,18 +64,18 @@ export function useTable(ctx:  any) {
           const currentStatus = row.currentStatus
           switch (currentStatus) {
             case JobStatus.RUNNING:
-              return h(NTag, {type: 'success', size: 'small'}, {default: () => currentStatus})
+              return h(NTag, { type: 'success', size: 'small' }, { default: () => currentStatus })
             case JobStatus.CANCELED:
             case JobStatus.FINISHED:
             case JobStatus.FRESHED:
-              return h(NTag, {type: 'info', size: 'small'}, {default: () => currentStatus})
+              return h(NTag, { type: 'info', size: 'small' }, { default: () => currentStatus })
             case JobStatus.FAILED:
             case JobStatus.UNKNOWN:
-              return h(NTag, {type: 'error', size: 'small'}, {default: () => currentStatus})
+              return h(NTag, { type: 'error', size: 'small' }, { default: () => currentStatus })
             default:
-              return h(NTag, {type: 'warning', size: 'small'}, {default: () => currentStatus})
+              return h(NTag, { type: 'warning', size: 'small' }, { default: () => currentStatus })
           }
-        }
+        },
       },
       {
         title: t('cdc.operation'),
@@ -101,14 +101,14 @@ export function useTable(ctx:  any) {
             onHandleRun: (row: any) => {
               const CDCStore = useCDCStore()
               CDCStore.setModel({
-                id: row.id
+                id: row.id,
               })
               ctx.emit('cdcJobSubmit', row)
             },
             onHandleCancel: (row: any) => {
               const CDCStore = useCDCStore()
               CDCStore.setModel({
-                id: row.id
+                id: row.id,
               })
               ctx.emit('cdcJobCancel', row)
             },
@@ -145,9 +145,7 @@ export function useTable(ctx:  any) {
   })
 
   function getTableData(jobName?: string) {
-    listAllCdcJob(false, jobName,
-        tableVariables.pagination.page,
-        tableVariables.pagination.pageSize).then(
+    listAllCdcJob(false, jobName, tableVariables.pagination.page, tableVariables.pagination.pageSize).then(
       (res: any) => {
         tableVariables.data = res.data
         tableVariables.pagination.itemCount = res.total

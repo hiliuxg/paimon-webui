@@ -36,26 +36,3 @@ export const useCDCStore = defineStore({
     },
   },
 })
-
-
-export interface CdcJobStatusState {
-   statusMap: Map<number, string>
-}
-
-export const useCdcJobStatusStore = defineStore({
-  id: 'cdcJobStatus',
-  state: (): CdcJobStatusState => ({
-    statusMap: new Map<number, string>(),
-  }),
-  persist: true,
-  getters: {
-    getStatusMap(): any {
-      return this.statusMap
-    },
-  },
-  actions: {
-    setStatusMap(statusMap: Map<number, string>): void {
-      this.statusMap = statusMap
-    },
-  },
-})

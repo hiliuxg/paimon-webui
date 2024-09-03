@@ -106,6 +106,7 @@ export default defineComponent({
             message.warning(t('playground.job_stopping_failed'))
         }
         catch (error) {
+          console.error(error)
           message.warning(t('playground.job_stopping_failed'))
         }
       }

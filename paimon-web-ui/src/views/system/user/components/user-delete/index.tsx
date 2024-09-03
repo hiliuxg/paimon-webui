@@ -27,10 +27,13 @@ export default defineComponent({
   },
   setup(props) {
     const onDelete = async () => {
-      (props.userId || props.userId === 0) && await deleteUser(props.userId)
-      props.onDelete && props.onDelete()
+      if (props.userId || props.userId === 0) {
+        await deleteUser(props.userId)
+      }
+      if (props.onDelete) {
+        props.onDelete()
+      }
     }
-
     return {
       onDelete,
     }

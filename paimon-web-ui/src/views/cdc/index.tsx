@@ -21,8 +21,8 @@ import List from './components/list'
 import styles from './index.module.scss'
 import Modal from '@/components/modal'
 import { useCDCStore } from '@/store/cdc'
-import {type CdcJobDefinition, type CdcJobSubmit, freshCdcJobStatus, submitCdcJob, cancelCdcJob} from '@/api/models/cdc'
-import {JobStatus} from "@/api/models/cdc/types/cdcJob";
+import { type CdcJobDefinition, type CdcJobSubmit, cancelCdcJob, freshCdcJobStatus, submitCdcJob } from '@/api/models/cdc'
+import { JobStatus } from '@/api/models/cdc/types/cdcJob'
 
 export default defineComponent({
   name: 'CDCPage',
@@ -59,7 +59,7 @@ export default defineComponent({
       if (id) {
         freshCdcJobStatus(id, logId).then((res: any) => {
           const status = res.data
-          if (status != JobStatus.SUBMITTING && status != JobStatus.CANCELLING && status != row.currentStatus) {
+          if (status !== JobStatus.SUBMITTING && status !== JobStatus.CANCELLING && status !== row.currentStatus) {
             // fresh target row status
             row.currentStatus = status
             actionJobMap.delete(id)
@@ -94,11 +94,12 @@ export default defineComponent({
       if (targetRow) {
         // update status
         targetRow.currentStatus = data.jobStatus
-        //cron interval to fresh status
-        if (targetRow.currentStatus == JobStatus.SUBMITTING ||
-            targetRow.currentStatus == JobStatus.CANCELLING) {
+        // cron interval to fresh status
+        if (targetRow.currentStatus === JobStatus.SUBMITTING
+          || targetRow.currentStatus === JobStatus.CANCELLING) {
           watchStatus(id, logId)
-        } else {
+        }
+        else {
           // remove the target row in actionJobMap
           actionJobMap.delete(id)
         }
@@ -125,10 +126,10 @@ export default defineComponent({
       cdcJobTableRef.value.getTableData(filterValue.value)
     }
 
-    function showSubmitCdcJobModal(row: any){
+    function showSubmitCdcJobModal(row: any) {
       // put the target row to action map
       actionJobMap.set(row.id, row)
-      showSubmitCdcJobModalRef.value = true;
+      showSubmitCdcJobModalRef.value = true
     }
 
     function handleCancelCdcJob(row: any) {
@@ -147,7 +148,7 @@ export default defineComponent({
         onPositiveClick: () => {
           actionJobMap.set(row.id, row)
           handleCancelCdcJob(row)
-        }
+        },
       })
     }
 
@@ -175,18 +176,18 @@ export default defineComponent({
             <n-card>
               <div class={styles.title}>
                 <n-space align="center">
-                  <n-icon component={Leaf} color="#2F7BEA" size="18"/>
+                  <n-icon component={Leaf} color="#2F7BEA" size="18" />
                   <span>{this.t('cdc.cdc_job_definition')}</span>
                 </n-space>
                 <div class={styles.operation}>
                   <n-space>
                     <n-input
-                        placeholder={this.t('playground.search')}
-                        v-model:value={this.filterValue}
-                        v-slots={{
-                          prefix: () => <n-icon component={Search}/>,
-                        }}
-                        onBlur={this.handleSearchCdcJobTable}
+                      placeholder={this.t('playground.search')}
+                      v-model:value={this.filterValue}
+                      v-slots={{
+                        prefix: () => <n-icon component={Search} />,
+                      }}
+                      onBlur={this.handleSearchCdcJobTable}
                     />
                     <n-button type="primary" onClick={this.handleOpenModal}>
                       {this.t('cdc.create_synchronization_job')}
@@ -195,33 +196,34 @@ export default defineComponent({
                 </div>
               </div>
             </n-card>
-            <List ref="cdcJobTableRef"
-                  onCdcJobSubmit={(row) => (this.showSubmitCdcJobModal(row))}
-                  onCdcJobCancel={(row) => (this.showCancelCdcJobMessage(row))}
+            <List
+              ref="cdcJobTableRef"
+              onCdcJobSubmit={row => (this.showSubmitCdcJobModal(row))}
+              onCdcJobCancel={row => (this.showCancelCdcJobMessage(row))}
             />
             {this.showModalRef && (
-                <Modal
-                    ref="CDCModalRef"
-                    showModal={this.showModalRef}
-                    title={this.t('cdc.create_synchronization_job')}
-                    formType="CDCLIST"
-                    onCancel={() => (this.showModalRef = false)}
-                    onConfirm={this.handleConfirm}
-                />
+              <Modal
+                ref="CDCModalRef"
+                showModal={this.showModalRef}
+                title={this.t('cdc.create_synchronization_job')}
+                formType="CDCLIST"
+                onCancel={() => (this.showModalRef = false)}
+                onConfirm={this.handleConfirm}
+              />
             )}
             {this.showSubmitCdcJobModalRef && (
-                <Modal
-                    ref="submitCdcJobModalRef"
-                    showModal={this.showSubmitCdcJobModalRef}
-                    title={this.t('cdc.submit_cdc_job')}
-                    formType="CDCSUBMIT"
-                    onCancel={() => (this.showSubmitCdcJobModalRef = false)}
-                    onConfirm={this.handleCdcSubmitConfirm}
-                />
+              <Modal
+                ref="submitCdcJobModalRef"
+                showModal={this.showSubmitCdcJobModalRef}
+                title={this.t('cdc.submit_cdc_job')}
+                formType="CDCSUBMIT"
+                onCancel={() => (this.showSubmitCdcJobModalRef = false)}
+                onConfirm={this.handleCdcSubmitConfirm}
+              />
             )}
           </n-space>
         </n-card>
       </div>
-  )
+    )
   },
 })

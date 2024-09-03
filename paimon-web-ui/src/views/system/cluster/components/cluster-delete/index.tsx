@@ -27,8 +27,12 @@ export default defineComponent({
   },
   setup(props) {
     const onDelete = async () => {
-      (props.clusterId || props.clusterId === 0) && await deleteCluster(props.clusterId)
-      props.onDelete && props.onDelete()
+      if (props.clusterId || props.clusterId === 0) {
+        await deleteCluster(props.clusterId)
+      }
+      if (props.onDelete) {
+        props.onDelete()
+      }
     }
 
     return {

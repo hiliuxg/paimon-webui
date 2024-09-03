@@ -35,6 +35,6 @@ export default antfu({
     '**/node_modules',
     '**/dist',
     'mock',
-    'httpData'
-  ]
+    'httpData',
+  ],
 })
