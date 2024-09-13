@@ -35,7 +35,7 @@ export function useSumbitCdcJob(item: any) {
     if (response && response.data) {
       const clusterList = response.data as Cluster[]
       flinkSessionClusterOptions.value = clusterList.filter((cluster) => {
-        return cluster.clusterName === 'yarn-session' || cluster.clusterName === 'k8s-session'
+        return cluster.deploymentMode === 'yarn-session' || cluster.deploymentMode === 'k8s-session'
       }).map(cluster => ({
         label: cluster.clusterName,
         value: cluster.id.toString(),

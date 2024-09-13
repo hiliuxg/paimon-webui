@@ -50,6 +50,7 @@ export default defineComponent({
         case JobStatus.UNKNOWN:
           emit('handleRun', row)
           break
+        case JobStatus.RESTARTING:
         case JobStatus.RUNNING:
           emit('handleCancel', row)
           break
@@ -87,6 +88,7 @@ export default defineComponent({
         case JobStatus.CANCELED:
         case JobStatus.UNKNOWN:
           return t('cdc.run')
+        case JobStatus.RESTARTING:
         case JobStatus.RUNNING:
           return t('cdc.cancel')
         case JobStatus.SUBMITTING:
@@ -106,6 +108,7 @@ export default defineComponent({
         case JobStatus.FAILED:
         case JobStatus.CANCELED:
           return PlayOutline
+        case JobStatus.RESTARTING:
         case JobStatus.RUNNING:
           return PauseOutline
         default:

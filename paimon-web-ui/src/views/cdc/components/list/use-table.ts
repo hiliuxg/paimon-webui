@@ -63,6 +63,7 @@ export function useTable(ctx: any) {
         render: (row: any) => {
           const currentStatus = row.currentStatus
           switch (currentStatus) {
+            case JobStatus.RESTARTING:
             case JobStatus.RUNNING:
               return h(NTag, { type: 'success', size: 'small' }, { default: () => currentStatus })
             case JobStatus.CANCELED:

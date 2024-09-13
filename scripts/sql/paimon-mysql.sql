@@ -152,6 +152,7 @@ CREATE TABLE if not exists `cdc_job_definition`
     create_user varchar(20)                        null comment 'create user',
     create_time datetime default CURRENT_TIMESTAMP null comment 'create time',
     update_time datetime default CURRENT_TIMESTAMP null comment 'update time',
+    data_delay  int      default                   null COMMENT 'data delay',
     is_delete   tinyint(1) default 0               not null comment 'is delete',
     constraint cdc_job_definition_pk
     unique (`name`)
@@ -167,9 +168,8 @@ CREATE TABLE if not exists `cdc_job_log`
     create_time datetime default CURRENT_TIMESTAMP null comment 'create time',
     update_time datetime default CURRENT_TIMESTAMP null comment 'update time',
     terminate_time datetime default null comment 'terminate time',
-    current_status  varchar(16)  not null comment 'cdc job current SUBMITTING, CREATED, RUNNING, FAILED, FINISHED, CANCELED',
-    flink_job_id varchar(32)                    default null comment 'flink job id',
-    extra text default null comment 'extra json'
+    current_status  varchar(16)  not null comment 'cdc job current FRESHED, RESTARTING, SUBMITTING, CREATED, RUNNING, FAILED, FINISHED, CANCELED',
+    flink_job_id varchar(32)                    default null comment 'flink job id'
     ) engine = innodb;
 
 CREATE TABLE if not exists `job`

@@ -54,12 +54,14 @@ export default defineComponent({
       showModalRef.value = true
     }
 
-    function freshStatus(row: CdcJobDefinition, logId: number) {
+    function freshStatus(row: CdcJobDefinition, logId: number, lastStatus: string | undefined) {
       const id = row.id
       if (id) {
         freshCdcJobStatus(id, logId).then((res: any) => {
           const status = res.data
-          if (status !== JobStatus.SUBMITTING && status !== JobStatus.CANCELLING && status !== row.currentStatus) {
+          if (status !== JobStatus.SUBMITTING
+            && status !== JobStatus.CANCELLING
+            && status !== lastStatus) {
             // fresh target row status
             row.currentStatus = status
             actionJobMap.delete(id)
@@ -76,12 +78,12 @@ export default defineComponent({
       }
     }
 
-    function watchStatus(id: number, logId: number) {
+    function watchStatus(id: number, logId: number, lastStatus: string | undefined) {
       const targetRow = actionJobMap.get(id)
       let refreshJobStatusIntervalId = refreshStatusMap.get(id)
       if (targetRow && !refreshJobStatusIntervalId) {
         refreshJobStatusIntervalId = setInterval(() => {
-          freshStatus(targetRow, logId)
+          freshStatus(targetRow, logId, lastStatus)
         }, INTERVAL_MILLISECOND)
         refreshStatusMap.set(id, refreshJobStatusIntervalId)
       }
@@ -93,11 +95,12 @@ export default defineComponent({
       const targetRow = actionJobMap.get(id)
       if (targetRow) {
         // update status
+        const lastStatus = targetRow.currentStatus
         targetRow.currentStatus = data.jobStatus
         // cron interval to fresh status
         if (targetRow.currentStatus === JobStatus.SUBMITTING
           || targetRow.currentStatus === JobStatus.CANCELLING) {
-          watchStatus(id, logId)
+          watchStatus(id, logId, lastStatus)
         }
         else {
           // remove the target row in actionJobMap

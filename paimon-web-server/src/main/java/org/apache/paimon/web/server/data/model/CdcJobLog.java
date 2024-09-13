@@ -21,7 +21,6 @@ package org.apache.paimon.web.server.data.model;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,7 +29,6 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Map;
 
 /** Model of cdc_job_log. */
 @TableName(value = "cdc_job_log")
@@ -53,7 +51,4 @@ public class CdcJobLog extends BaseModel implements Serializable {
     private String currentStatus;
 
     private String flinkJobId;
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private Map<String, Object> extra;
 }

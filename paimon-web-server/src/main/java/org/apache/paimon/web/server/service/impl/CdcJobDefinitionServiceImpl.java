@@ -75,6 +75,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -231,6 +232,7 @@ public class CdcJobDefinitionServiceImpl
         lock.lock();
         try {
             CdcJobDefinition cdcJobDefinition = baseMapper.selectById(id);
+            log.info("to submit job {}: {}", cdcJobDefinition.getId(), cdcJobDefinition.getName());
             FlinkCdcSyncType flinkCdcSyncType =
                     FlinkCdcSyncType.valueOf(cdcJobDefinition.getCdcType());
             CdcGraph cdcGraph = CdcGraph.fromCdcGraphJsonString(cdcJobDefinition.getConfig());
@@ -271,6 +273,7 @@ public class CdcJobDefinitionServiceImpl
      */
     @Override
     public R<ActionExecutionResultVo> cancel(Integer id) {
+        log.info("to cancel job {}", id);
         ReentrantLock lock = cacher.getUnchecked(id);
         if (lock.isLocked()) {
             return R.of(
@@ -325,6 +328,7 @@ public class CdcJobDefinitionServiceImpl
      */
     @Override
     public R<JobStatus> status(Integer id, Integer logId) {
+        log.info("to ask status of jobId {}, logId {}", id, logId);
         ReentrantLock lock = cacher.getUnchecked(id);
         if (lock.isLocked()) {
             return R.of(
@@ -456,19 +460,22 @@ public class CdcJobDefinitionServiceImpl
         }
     }
 
-    private List<String> getOtherConfigs(ObjectNode node) {
-        String otherConfigs = JSONUtils.getString(node, "other_configs");
-        List<String> configList;
-        if (StringUtils.isBlank(otherConfigs)) {
-            configList = new ArrayList<>();
-        } else {
-            configList = new ArrayList<>(Arrays.asList(otherConfigs.split(";")));
-        }
-        return configList;
+    private List<String> getByKeyToList(ObjectNode node, String key) {
+        String stringValue = JSONUtils.getString(node, key);
+        return Optional.of(stringValue)
+                .map(item -> new ArrayList<>(Arrays.asList(item.split(";"))))
+                .orElse(new ArrayList<>());
     }
 
     private void handlePostgresNodeData(ObjectNode actionConfigs, ObjectNode postgresData) {
-        List<String> postgresConfList = getOtherConfigs(postgresData);
+        List<String> computedColumnList =
+                getByKeyToList(postgresData, FlinkCdcOptions.COMPUTED_COLUMN);
+        actionConfigs.putPOJO(FlinkCdcOptions.COMPUTED_COLUMN, computedColumnList);
+        actionConfigs.put(
+                FlinkCdcOptions.METADATA_COLUMN,
+                JSONUtils.getString(postgresData, FlinkCdcOptions.METADATA_COLUMN));
+
+        List<String> postgresConfList = getByKeyToList(postgresData, "other_configs");
         postgresConfList.add(
                 buildKeyValueString("hostname", JSONUtils.getString(postgresData, "host")));
         postgresConfList.add(
@@ -495,7 +502,14 @@ public class CdcJobDefinitionServiceImpl
             ObjectNode mysqlData,
             FlinkCdcSyncType cdcSyncType,
             CdcJobSubmitDTO cdcJobSubmitDTO) {
-        List<String> mysqlConfList = getOtherConfigs(mysqlData);
+        List<String> computedColumnList =
+                getByKeyToList(mysqlData, FlinkCdcOptions.COMPUTED_COLUMN);
+        actionConfigs.putPOJO(FlinkCdcOptions.COMPUTED_COLUMN, computedColumnList);
+        actionConfigs.put(
+                FlinkCdcOptions.METADATA_COLUMN,
+                JSONUtils.getString(mysqlData, FlinkCdcOptions.METADATA_COLUMN));
+
+        List<String> mysqlConfList = getByKeyToList(mysqlData, "other_configs");
         mysqlConfList.add(buildKeyValueString("hostname", JSONUtils.getString(mysqlData, "host")));
         mysqlConfList.add(
                 buildKeyValueString("username", JSONUtils.getString(mysqlData, "username")));
@@ -532,6 +546,10 @@ public class CdcJobDefinitionServiceImpl
 
     private void handlePaimonNodeData(
             ObjectNode actionConfigs, ObjectNode paimonData, FlinkCdcSyncType cdcSyncType) {
+        actionConfigs.put(
+                FlinkCdcOptions.PARTITION_KEYS,
+                JSONUtils.getString(paimonData, "partition_column"));
+
         Integer catalog = JSONUtils.getInteger(paimonData, "catalog");
         CatalogInfo catalogInfo = catalogService.getById(catalog);
         actionConfigs.put(FlinkCdcOptions.WAREHOUSE, catalogInfo.getWarehouse());
@@ -541,13 +559,10 @@ public class CdcJobDefinitionServiceImpl
         actionConfigs.put(FlinkCdcOptions.DATABASE, JSONUtils.getString(paimonData, "database"));
         actionConfigs.put(
                 FlinkCdcOptions.PRIMARY_KEYS, JSONUtils.getString(paimonData, "primary_key"));
-        String otherConfigs = JSONUtils.getString(paimonData, "other_configs2");
-        if (StringUtils.isBlank(otherConfigs)) {
-            actionConfigs.putPOJO(FlinkCdcOptions.TABLE_CONF, new ArrayList<>());
-        } else {
-            actionConfigs.putPOJO(
-                    FlinkCdcOptions.TABLE_CONF, Arrays.asList(otherConfigs.split(";")));
-        }
+
+        List<String> configList = getByKeyToList(paimonData, "other_configs2");
+        actionConfigs.putPOJO(FlinkCdcOptions.TABLE_CONF, configList);
+
         List<String> catalogConfList = new ArrayList<>();
         Map<String, String> options = catalogInfo.getOptions();
         PaimonServiceFactory.convertToPaimonOptions(options)

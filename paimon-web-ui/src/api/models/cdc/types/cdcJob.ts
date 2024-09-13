@@ -36,6 +36,7 @@ export interface CdcJobSubmit {
 }
 
 export enum JobStatus {
+  RESTARTING = 'RESTARTING',
   FRESHED = 'FRESHED',
   SUBMITTING = 'SUBMITTING',
   CANCELLING = 'CANCELLING',
