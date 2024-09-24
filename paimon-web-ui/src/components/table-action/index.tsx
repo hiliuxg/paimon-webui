@@ -60,6 +60,13 @@ export default defineComponent({
     }
 
     const handleDelete = (row: CdcJobDefinition) => {
+      if (row.currentStatus === JobStatus.CANCELLING
+        || row.currentStatus === JobStatus.RUNNING
+        || row.currentStatus === JobStatus.RESTARTING
+        || row.currentStatus === JobStatus.SUBMITTING) {
+        message.warning(t('cdc.cdc_job_can_not_delete'))
+        return
+      }
       dialog.warning({
         title: t('cdc.confirm_title'),
         content: t('cdc.confirm_delete_content'),

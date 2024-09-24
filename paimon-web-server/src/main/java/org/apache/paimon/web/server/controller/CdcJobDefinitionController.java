@@ -91,8 +91,7 @@ public class CdcJobDefinitionController {
     @SaCheckPermission("cdc:job:delete")
     @DeleteMapping("{id}")
     public R<Void> deleteById(@PathVariable Integer id) {
-        cdcJobDefinitionService.removeById(id);
-        return R.succeed();
+        return cdcJobDefinitionService.deleteById(id);
     }
 
     @SaCheckPermission("cdc:job:copy")

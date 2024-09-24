@@ -66,6 +66,7 @@ import org.apache.flink.shaded.guava31.com.google.common.cache.CacheBuilder;
 import org.apache.flink.shaded.guava31.com.google.common.cache.CacheLoader;
 import org.apache.flink.shaded.guava31.com.google.common.cache.LoadingCache;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -133,6 +134,22 @@ public class CdcJobDefinitionServiceImpl
                         .build();
         baseMapper.insert(cdcJobDefinition);
         return R.succeed();
+    }
+
+    @Override
+    public R<Void> deleteById(Integer id) {
+        CdcJobLog cdcJobLog = cdcJobLogService.findLast(id);
+        if (cdcJobLog == null) {
+            removeById(id);
+            return R.succeed();
+        }
+        R<JobStatus> jobStatusR = status(id, cdcJobLog.getId());
+        if (isStatusOnIng(jobStatusR.getData())) {
+            return R.failed(Status.CDC_JOB_CAN_NOT_DELETE);
+        } else {
+            removeById(id);
+            return R.succeed();
+        }
     }
 
     @Override
@@ -574,5 +591,34 @@ public class CdcJobDefinitionServiceImpl
 
     private String buildKeyValueString(String key, String value) {
         return key + "=" + value;
+    }
+
+    /** Crontab to check cdc job status. */
+    @Scheduled(cron = "0 * * * * ?")
+    public R<Void> checkAllStatus() {
+        QueryWrapper<CdcJobDefinition> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id");
+        List<Integer> cdcJobDefinitionIdList = listObjs(queryWrapper, item -> (Integer) item);
+        cdcJobDefinitionIdList.forEach(
+                id -> {
+                    CdcJobLog cdcJobLog = cdcJobLogService.findLast(id);
+                    Optional.of(cdcJobLog)
+                            .ifPresent(
+                                    item -> {
+                                        if (isStatusOnIng(
+                                                JobStatus.fromValue(
+                                                        cdcJobLog.getCurrentStatus()))) {
+                                            status(id, cdcJobLog.getId());
+                                        }
+                                    });
+                });
+        return R.succeed();
+    }
+
+    private boolean isStatusOnIng(JobStatus jobStatus) {
+        return (JobStatus.CANCELLING == jobStatus
+                || JobStatus.SUBMITTING == jobStatus
+                || JobStatus.RESTARTING == jobStatus
+                || JobStatus.RUNNING == jobStatus);
     }
 }

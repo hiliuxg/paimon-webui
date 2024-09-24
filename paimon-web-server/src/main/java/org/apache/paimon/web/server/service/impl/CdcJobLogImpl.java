@@ -33,6 +33,12 @@ import org.springframework.stereotype.Service;
 public class CdcJobLogImpl extends ServiceImpl<CdcJobLogMapper, CdcJobLog>
         implements CdcJobLogService {
 
+    /**
+     * Find last status log of cdc job.
+     *
+     * @param cdcJobDefinitionId The cdc job primary key id.
+     * @return The last status log of cdc job.
+     */
     @Override
     public CdcJobLog findLast(Integer cdcJobDefinitionId) {
         QueryWrapper<CdcJobLog> queryWrapper = new QueryWrapper<>();

@@ -46,4 +46,6 @@ public interface CdcJobDefinitionService extends IService<CdcJobDefinition> {
     R<JobStatus> status(Integer id, Integer logId);
 
     R<Integer> copy(Integer id);
+
+    R<Void> deleteById(Integer id);
 }

@@ -91,6 +91,7 @@ export function useMYSQL(item: any) {
         name: t('cdc.password'),
         props: {
           placeholder: '',
+          type: 'password',
         },
         span: computed(() => tabType.value === 'connection_information' ? 24 : 0),
         validate: {

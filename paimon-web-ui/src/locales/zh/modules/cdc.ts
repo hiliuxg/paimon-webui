@@ -29,6 +29,7 @@ export default {
   confirm_cancel_content: '您确定要取消吗？',
   confirm_sure: '确定',
   confirm_cancel: '取消',
+  cdc_job_can_not_delete: '该状态下的作业不能删除',
   job_name: '作业名称',
   cdc_job_exe_error: '作业执行失败',
   cdc_job_exe_success: '作业执行成功',

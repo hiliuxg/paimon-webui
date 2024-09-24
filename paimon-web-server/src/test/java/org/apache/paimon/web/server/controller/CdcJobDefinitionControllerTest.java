@@ -233,7 +233,7 @@ public class CdcJobDefinitionControllerTest extends ControllerTestBase {
                 .getResponse();
     }
 
-    @Order(4)
+    @Order(5)
     @Test
     public void submitDatabaseSyncCdcJob() throws Exception {
         System.setProperty("FLINK_HOME", "/opt/flink");
